@@ -182,8 +182,8 @@ def profile_lock(name: str, *, metadata: bool = False) -> Iterator[None]:
         if os.name == "nt":
             import msvcrt
 
-            stream.write(b"\0")
-            stream.flush()
+            # Windows permits byte-range locks past EOF. Never initialize the
+            # byte before locking: another process may already hold that range.
             stream.seek(0)
             msvcrt.locking(stream.fileno(), msvcrt.LK_LOCK, 1)
         else:

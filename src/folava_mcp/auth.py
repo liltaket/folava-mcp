@@ -18,6 +18,7 @@ import webbrowser
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from socketserver import TCPServer
 from typing import Any
 from urllib.parse import parse_qs, urlencode, urlsplit
 
@@ -416,6 +417,12 @@ def receive_authorization_code(
                 pass
 
     class LoopbackServer(HTTPServer):
+        def server_bind(self) -> None:
+            # HTTPServer normally reverse-resolves its address, which can block
+            # startup on desktop DNS configurations. This host is already numeric.
+            TCPServer.server_bind(self)
+            self.server_name, self.server_port = self.server_address[:2]
+
         def get_request(self) -> tuple[Any, Any]:
             connection, address = super().get_request()
             connection.settimeout(max(0.001, min(2, deadline - time.monotonic())))

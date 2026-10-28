@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.2 — cross-platform authentication fixes
+
+- Start the numeric loopback OAuth listener without a reverse DNS lookup, which
+  could delay or prevent callback readiness on macOS.
+- Acquire Windows byte-range locks without writing the locked byte first, so
+  concurrent credential refreshes wait correctly instead of failing with access denied.
+- Added a deterministic no-DNS regression; the existing concurrent-refresh test
+  detected the Windows issue in hosted CI.
+
 ## 0.1.1 — deeper validation and documentation site
 
 - Added GitHub Pages with installation, canonical documentation and a searchable

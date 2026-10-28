@@ -5,7 +5,7 @@ Local evidence recorded 2026-10-28 on Linux, Python 3.14.4.
 | Check | Evidence |
 | --- | --- |
 | Locked development installation | `uv sync --frozen` completed in a clean project environment. |
-| Automated suite | 186 tests passed, including protocol and local TLS fixtures. |
+| Automated suite | 187 tests passed, including protocol and local TLS fixtures. |
 | Static site | 14 generated pages; internal links/anchors and catalog match validated. |
 | Chromium interactions | Example tabs/keyboard, copy success/denial, search/details/empty state, docs navigation, 320/390px layout passed. |
 | Static checks | Ruff lint and formatting passed. |
@@ -47,3 +47,9 @@ The independent [0.1.1 review](research/v011-review.md) found a release/deployme
 ordering hazard; the explicit published-release manifest and deployment-time
 installer check address it. The parent ran Chromium checks with the web tools
 installed; the review report correctly distinguishes its own environment limits.
+
+Hosted Windows/macOS execution exposed two further authentication issues after
+the 0.1.1 local pass: Windows lock-byte initialization before lock acquisition,
+and reverse DNS during numeric loopback server startup on macOS. Version 0.1.2
+removes both dependencies. The no-DNS regression is deterministic locally; the
+concurrent-refresh test exercises the Windows lock behavior on Windows CI.

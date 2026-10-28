@@ -550,3 +550,15 @@ def test_failed_profile_commit_removes_new_secret_and_preserves_previous(memory,
     assert load_profile() == metadata
     assert memory.items == before
     assert auth.load_credentials().token == "existing-token"
+
+
+def test_loopback_callback_never_depends_on_reverse_dns(callback_server, monkeypatch):
+    import socket
+
+    def forbidden_lookup(*args):
+        raise AssertionError("A numeric loopback listener must not perform reverse DNS")
+
+    monkeypatch.setattr(socket, "getfqdn", forbidden_lookup)
+    with callback_server() as (port, result, finished):
+        assert _callback_http(port, "/callback?code=accepted&state=expected-state")[0] == 200
+        assert finished.wait(1) and result == {"code": "accepted"}

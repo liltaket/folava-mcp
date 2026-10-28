@@ -204,8 +204,6 @@ def _poll_lock(state_path: Path):
             if os.name == "nt":
                 import msvcrt
 
-                if os.fstat(fd).st_size == 0:
-                    os.write(fd, b"0")
                 os.lseek(fd, 0, os.SEEK_SET)
                 msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
             else:

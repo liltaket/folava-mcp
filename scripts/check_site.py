@@ -47,7 +47,8 @@ def check_theme(page, expected):
             '.theme-control select', '.primary', '.source-type', '.source-meta',
             '.install-band', '.install-band .small', '.code-block', '.copy-button',
             '.operation summary span', '.docs-sidebar a', 'input', '.copy-status',
-            '.agent-setup', '.setup-prompt', '.copy-link', '.clear-search'];
+            '.agent-setup', '.setup-prompt', '.icon-copy', '.clear-search',
+            '.prompt-details summary', '.setup-command code'];
           return selectors.flatMap(selector => [...document.querySelectorAll(selector)]
             .filter(element => element.getClientRects().length)
             .flatMap(element => {
@@ -145,15 +146,18 @@ def check(site: Path, screenshots: Path | None = None):
         )
         page.get_by_role("button", name="Copy setup prompt").click()
         expect(page.get_by_role("status")).to_have_text("Setup prompt copied.")
-        expect(page.get_by_role("button", name="Copy setup prompt")).to_have_text(
+        expect(page.get_by_role("button", name="Copy setup prompt")).to_have_accessible_name(
             "Copy setup prompt"
         )
+        expect(page.locator("#setup-prompt")).to_be_hidden()
         prompt = page.evaluate("window.copied")
+        assert prompt == page.locator("#setup-prompt").text_content()
+        assert prompt != page.locator(".setup-command code").inner_text()
         assert "https://liltaket.github.io/folava-mcp/install.md" in prompt
         assert "demo" in prompt and "credentials outside" in prompt
-        page.get_by_role("button", name="Copy link", exact=True).click()
-        assert page.evaluate("window.copied") == "https://liltaket.github.io/folava-mcp/install.md"
-        expect(page.get_by_role("status")).to_have_text("Setup link copied.")
+        expect(page.get_by_role("link", name="Setup guide", exact=True)).to_have_attribute(
+            "href", "/folava-mcp/install.md"
+        )
         page.get_by_role("button", name="Copy installation command").click()
         expect(page.get_by_role("status")).to_have_text("Command copied.")
         check_theme(page, "light")
@@ -172,6 +176,8 @@ def check(site: Path, screenshots: Path | None = None):
         )
         page.get_by_role("button", name="Copy setup prompt").click()
         expect(page.get_by_role("status")).to_contain_text("copy it manually")
+        expect(page.locator(".prompt-details")).to_have_attribute("open", "")
+        expect(page.locator("#setup-prompt")).to_be_visible()
         assert page.evaluate("window.getSelection().toString()") == prompt
         page.get_by_role("button", name="Copy demo connection command").click()
         expect(page.get_by_role("status")).to_contain_text("copy it manually")
@@ -266,6 +272,12 @@ def check(site: Path, screenshots: Path | None = None):
         page.goto(ORIGIN)
         page.emulate_media(reduced_motion="reduce")
         assert (
+            page.locator(".hero-signal rect").evaluate(
+                "element => getComputedStyle(element).animationName"
+            )
+            == "none"
+        )
+        assert (
             page.locator(".agent-setup").evaluate(
                 "element => getComputedStyle(element).animationName"
             )
@@ -279,6 +291,29 @@ def check(site: Path, screenshots: Path | None = None):
         )
         page.emulate_media(reduced_motion="no-preference")
         page.reload()
+        assert (
+            page.locator(".hero-signal rect").evaluate(
+                "element => getComputedStyle(element).animationIterationCount"
+            )
+            == "1"
+        )
+        assert (
+            page.locator(".hero-signal rect").evaluate(
+                "element => getComputedStyle(element).animationDuration"
+            )
+            == "4.6s"
+        )
+        trace = page.locator(".hero-signal").evaluate(
+            """element => {
+              const animations = element.getAnimations({subtree: true});
+              animations.forEach(animation => { animation.currentTime = 2300; });
+              const style = getComputedStyle(element.querySelector('rect'));
+              const middle = parseFloat(style.strokeDashoffset);
+              animations.forEach(animation => { animation.currentTime = 5000; });
+              return {middle, finishedOpacity: getComputedStyle(element).opacity};
+            }"""
+        )
+        assert 0 < trace["middle"] < 1000 and trace["finishedOpacity"] == "0"
         assert (
             page.locator(".agent-setup").evaluate(
                 "element => getComputedStyle(element).animationIterationCount"
@@ -330,6 +365,8 @@ def check(site: Path, screenshots: Path | None = None):
         no_script_page.goto(ORIGIN)
         expect(no_script_page.get_by_role("heading", level=1)).to_be_visible()
         expect(no_script_page.locator(".theme-control")).to_be_hidden()
+        no_script_page.get_by_text("View full prompt", exact=True).click()
+        expect(no_script_page.locator("#setup-prompt")).to_be_visible()
         assert (
             no_script_page.locator("html").evaluate(
                 "element => getComputedStyle(element).colorScheme"

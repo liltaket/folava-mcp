@@ -1,21 +1,17 @@
 <section class="hero wrap">
   <div class="hero-copy">
-    <p class="release-note">Canvas, with a little help from your agent</p>
     <h1>Your agent,<br>meet Canvas.</h1>
     <p class="lead">Bring your courses, deadlines and feedback into the conversation.</p>
-    <p>Already using Codex, T3 Code or another agent? Give it the setup note. It can install Folava and connect a practice workspace, then help you connect Canvas.</p>
-    <div class="actions"><a class="button primary" href="#agent-setup">Set up with your agent</a><a class="text-link" href="#install">I’ll do it myself</a></div>
-    <p class="small muted">Open source. Runs on your computer. No Folava account.</p>
+    <div class="actions"><a class="button primary" href="#agent-setup">Use your agent</a><a class="text-link" href="#install">Manual setup</a></div>
+    <p class="small muted">Open source. On your computer.</p>
   </div>
   <aside id="agent-setup" tabindex="-1" class="agent-setup" aria-labelledby="agent-setup-title">
-    <h2 id="agent-setup-title">Let your agent handle setup.</h2>
-    <p class="muted">Copy this into your conversation. It has the link and the next steps.</p>
-    <p id="setup-prompt" class="setup-prompt">{{AGENT_PROMPT}}</p>
-    <button id="copy-setup-prompt" class="button primary setup-copy" data-copy data-copy-target="setup-prompt" data-copy-label="Setup prompt" hidden>Copy setup prompt</button>
-    <p class="setup-link-label">Just need the link?</p>
-    <div class="setup-link"><a id="setup-link" href="{{BASE}}install.md">{{SETUP_URL}}</a><button class="copy-link" data-copy data-copy-target="setup-link" data-copy-label="Setup link" hidden>Copy link</button></div>
-    <p class="small muted setup-note">Starts with demo data. You connect your own account privately when you’re ready.</p>
-    <noscript><p class="small">Select the setup text to copy it, or <a href="{{BASE}}install.md">open the agent guide</a>.</p></noscript>
+    <svg class="hero-signal" aria-hidden="true" focusable="false"><rect width="100%" height="100%" rx="18" pathLength="1000"/></svg>
+    <h2 id="agent-setup-title">Let your agent set it up.</h2>
+    <p class="muted">Copy this into your conversation.</p>
+    <div class="setup-command"><code>Install Folava MCP</code><button id="copy-setup-prompt" class="icon-copy" data-copy data-copy-target="setup-prompt" data-copy-label="Setup prompt" aria-label="Copy setup prompt" title="Copy full setup instructions" hidden><svg class="copy-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg><svg class="check-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 12 4 4 10-10"/></svg></button></div>
+    <details class="prompt-details"><summary>View full prompt</summary><p id="setup-prompt" class="setup-prompt">{{AGENT_PROMPT}}</p></details>
+    <p class="small muted setup-note"><a href="{{BASE}}install.md">Setup guide</a>. Starts with demo data.</p>
   </aside>
 </section>
 <section id="install" class="install-band">

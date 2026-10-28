@@ -120,6 +120,15 @@ button:disabled {
     margin-left: .4em
 }
 
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap
+}
+
 button,
 a,
 input,
@@ -346,20 +355,13 @@ td code {
     padding-block: 88px 100px
 }
 
-.release-note {
-    color: var(--label);
-    font-size: .85rem;
-    font-weight: 650;
-    margin-bottom: 26px
-}
-
 .lead {
     font-size: 1.25rem;
     line-height: 1.5;
     margin-top: 25px
 }
 
-.hero-copy>p:not(.release-note) {
+.hero-copy>p {
     max-width: 44ch
 }
 
@@ -383,6 +385,7 @@ td code {
 }
 
 .agent-setup {
+    position: relative;
     padding: 30px;
     border: 1px solid var(--line);
     border-radius: 18px;
@@ -400,56 +403,98 @@ td code {
 }
 
 .setup-prompt {
-    padding: 20px;
-    margin: 24px 0 18px;
-    background: var(--paper);
-    border-left: 3px solid var(--quote-line);
-    line-height: 1.65;
+    margin: 12px 0 0;
+    font-size: .83rem;
+    line-height: 1.6;
     overflow-wrap: anywhere
 }
 
-.setup-copy {
-    border: 0;
-    width: 100%;
-    cursor: pointer
-}
-
-.setup-link-label {
-    margin: 24px 0 6px;
-    font-weight: 600
-}
-
-.setup-link {
+.setup-command {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 12px
-}
-
-.setup-link a {
-    min-width: 0;
-    overflow-wrap: anywhere;
-    font-size: .79rem
-}
-
-.copy-link {
-    flex: none;
-    padding: 8px 12px;
-    min-height: 44px;
-    border: 1px solid var(--line);
-    border-radius: 6px;
+    gap: 12px;
+    padding: 8px 8px 8px 18px;
+    margin: 22px 0 14px;
     background: var(--paper);
-    color: var(--link);
-    font-size: .75rem;
-    cursor: pointer
+    border: 1px solid var(--line);
+    border-radius: 12px
 }
 
-.copy-link:hover {
+.setup-command code {
+    font-size: .88rem
+}
+
+.icon-copy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    padding: 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--link)
+}
+
+.icon-copy:hover {
     background: var(--active)
 }
 
+.icon-copy svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round
+}
+
+.icon-copy .check-glyph,
+.icon-copy[data-copied] .copy-glyph {
+    display: none
+}
+
+.icon-copy[data-copied] .check-glyph {
+    display: block
+}
+
+.icon-copy[data-copied]::after {
+    content: none
+}
+
+.prompt-details summary {
+    width: fit-content;
+    color: var(--muted);
+    font-size: .78rem;
+    cursor: pointer;
+    padding-block: 5px
+}
+
 .agent-setup .setup-note {
-    margin: 20px 0 0;
+    margin: 18px 0 0;
     font-size: .78rem
+}
+
+.hero-signal {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+    opacity: 0
+}
+
+.hero-signal rect {
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.5;
+    stroke-dasharray: 55 945;
+    vector-effect: non-scaling-stroke
 }
 
 .example-workspace {
@@ -1151,7 +1196,7 @@ td code {
     }
 
     .hero h1 {
-        font-size: 3.6rem
+        font-size: clamp(2.6rem, 5.4vw, 3.4rem)
     }
 
     .preview-note {
@@ -1199,15 +1244,6 @@ td code {
         font-size: 1.15rem
     }
 
-    .theme-control>span {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip-path: inset(50%);
-        white-space: nowrap
-    }
-
     .theme-control select {
         padding: 7px 22px 7px 8px
     }
@@ -1237,12 +1273,8 @@ td code {
         padding-block: 50px 0
     }
 
-    .hero-copy>p:not(.release-note) {
+    .hero-copy>p {
         max-width: 50ch
-    }
-
-    .release-note {
-        margin-bottom: 22px
     }
 
     .lead {
@@ -1392,6 +1424,24 @@ td code {
         animation: sample-arrive .5s ease-out both
     }
 
+    .hero-signal {
+        animation: signal-presence 4.6s ease-out both
+    }
+
+    .hero-signal rect {
+        animation: signal-travel 4.6s cubic-bezier(.2,.45,.5,1) both
+    }
+
+    @keyframes signal-presence {
+        0%, 100% { opacity: 0 }
+        12%, 75% { opacity: .55 }
+    }
+
+    @keyframes signal-travel {
+        from { stroke-dashoffset: 1000 }
+        to { stroke-dashoffset: 0 }
+    }
+
     @keyframes sample-arrive {
         from { opacity: 0; transform: translateY(7px) }
         to { opacity: 1; transform: translateY(0) }
@@ -1413,6 +1463,8 @@ td code {
     .site-footer,
     .docs-sidebar,
     .copy-button,
+    .icon-copy,
+    .hero-signal,
     .copy-status {
         display: none !important
     }

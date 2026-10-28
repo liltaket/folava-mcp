@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Compacted the hero into a short installation row whose copy icon copies the
+  complete agent prompt. The full text remains available in a disclosure and
+  opens for manual copying if clipboard access fails. Shortened the introduction
+  and theme control; added one finite hero trace respecting reduced motion.
 - Added an original note-sheet mark and neutral light/dark branding, with round
   translucent navigation and a solid reduced-transparency fallback.
 - Kept copy labels stable and improved selection feedback when clipboard access

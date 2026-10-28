@@ -113,7 +113,7 @@ def frame(title: str, content: str, base: str, *, route: str, active: str = "") 
 </head><body><a class="skip-link" href="#main">Skip to content</a>
 <header class="site-header"><div class="wrap header-inner"><a class="brand" href="{base}" aria-label="Folava MCP home">{brand_mark()}folava <span>MCP</span></a>
 <div class="header-controls"><nav class="site-nav" aria-label="Main navigation">{nav("Guide", "docs/getting-started/", "docs")}{nav("API catalog", "catalog/", "catalog")}<a href="{REPO}">GitHub</a></nav>
-<label class="theme-control" hidden for="theme-choice"><span>Theme</span><select id="theme-choice"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label></div></div></header>
+<label class="theme-control" hidden for="theme-choice"><span class="visually-hidden">Theme</span><select id="theme-choice"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label></div></div></header>
 <main id="main" tabindex="-1">{content}</main>
 <footer class="site-footer"><div class="wrap footer-inner"><p>Folava MCP · Independent open source · Apache-2.0</p><div class="footer-links"><a href="{base}docs/security/">Security</a><a href="{REPO}/releases">Releases</a><a href="{REPO}/issues">Issues</a></div></div></footer>
 <div id="copy-status" class="copy-status" role="status" aria-live="polite"></div>
@@ -272,7 +272,6 @@ def build(output: Path, base_path: str = "/folava-mcp/") -> None:
             .replace("{{VERSION}}", release_version())
             .replace("{{INSTALL_COMMAND}}", ESC(version_install()))
             .replace("{{AGENT_PROMPT}}", ESC(AGENT_PROMPT))
-            .replace("{{SETUP_URL}}", ESC(SETUP_URL))
             .replace("{{BRAND_MARK}}", brand_mark())
         )
 

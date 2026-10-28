@@ -1,8 +1,10 @@
 # Folava MCP site direction
 
 A quiet, useful front door to a personal study tool. The homepage's main job is
-to let someone hand setup to their agent. A copyable prompt and a plain guide
-link come before the manual commands and fictional coursework example.
+to let someone hand setup to their agent. A short installation row and a copy
+icon come before the manual commands and fictional coursework example. The icon
+copies the complete agent instructions; a native disclosure shows that text on
+request and opens automatically if manual copying is needed.
 
 ## Visual language
 
@@ -35,7 +37,9 @@ selection fallback. The agent guide starts with a demo, preserves existing host
 configuration and keeps authentication private. Coursework examples are fictional;
 the website never connects to a student account.
 
-Motion responds to actions or gives the setup note one finite, subtle arrival.
-No looping motion, scroll reveals or decorative stagger. Reduced-motion
+Motion gives the setup note one finite, subtle arrival and traces one thin
+neutral segment around its edge for 4.6 seconds. No looping motion, scroll
+reveals or decorative stagger. Colour variants remain local design prototypes
+until a choice is made. Reduced-motion
 preferences disable authored animation and transitions. Clear keyboard focus,
 contrast and responsive reading order are release requirements.

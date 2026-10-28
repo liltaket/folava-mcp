@@ -32,6 +32,7 @@
         clearTimeout(resetLabel);
         resetLabel = setTimeout(() => { delete button.dataset.copied; }, 1800);
       } catch {
+        code.closest('details')?.setAttribute('open', '');
         const range = document.createRange();
         range.selectNodeContents(code);
         const selection = window.getSelection();

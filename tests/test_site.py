@@ -97,3 +97,12 @@ def test_unpublished_installer_check_stops_deployment(monkeypatch):
     monkeypatch.setattr(urllib.request, "urlopen", missing)
     with pytest.raises(urllib.error.HTTPError):
         BUILD["verify_release"]()
+
+
+def test_section_links_preserve_existing_markdown_heading_links(tmp_path):
+    source = tmp_path / "reference.md"
+    source.write_text("## [Reference](https://example.org/)\n", encoding="utf-8")
+    parsed = Links()
+    parsed.feed(BUILD["markdown_document"](source, "./"))
+    assert len(parsed.ids) == 1
+    assert parsed.links == ["https://example.org/"]

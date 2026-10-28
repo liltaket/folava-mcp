@@ -74,6 +74,7 @@
   const search = document.getElementById('operation-search');
   if (search) {
     document.getElementById('catalog-controls').hidden = false;
+    document.getElementById('catalog-fallback').hidden = true;
     const clear = document.getElementById('clear-search');
     const operations = [...document.querySelectorAll('[data-operation]')];
     const count = document.getElementById('operation-count');

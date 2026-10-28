@@ -33,6 +33,8 @@ DOCUMENTS = {
     "validation": ("Validation", "docs/validation.md"),
     "testing": ("Test scenarios", "docs/testing.md"),
     "contributing": ("Contribute", "CONTRIBUTING.md"),
+    "branding": ("Project identity", "docs/branding.md"),
+    "releasing": ("Release checklist", "docs/releasing.md"),
     "security": ("Security", "SECURITY.md"),
     "changelog": ("Changelog", "CHANGELOG.md"),
 }
@@ -155,6 +157,25 @@ def markdown_document(source: Path, base: str) -> str:
                 unique, number = f"{slug}-{number}", number + 1
             used.add(unique)
             token.attrSet("id", unique)
+            children = tokens[index + 1].children or []
+            if token.tag in ("h2", "h3") and not any(
+                child.type == "link_open" for child in children
+            ):
+                token.meta["section_link"] = True
+                tokens[index + 2].meta["section_link"] = True
+
+    def heading_open(tokens, idx, options, env):
+        opening = md.renderer.renderToken(tokens, idx, options, env)
+        if tokens[idx].meta.get("section_link"):
+            opening += f'<a class="heading-link" href="#{ESC(tokens[idx].attrGet("id"))}">'
+        return opening
+
+    def heading_close(tokens, idx, options, env):
+        prefix = "</a>" if tokens[idx].meta.get("section_link") else ""
+        return prefix + md.renderer.renderToken(tokens, idx, options, env)
+
+    md.renderer.rules["heading_open"] = heading_open
+    md.renderer.rules["heading_close"] = heading_close
     return md.renderer.render(tokens, md.options, {})
 
 
@@ -208,7 +229,7 @@ These {len(operations)} operation IDs come directly from the software’s review
 Unknown methods, routes and query keys are rejected. <a href="{base}docs/tools/">Read the tool guide</a>.</p>
 <div id="catalog-controls" class="catalog-controls" hidden><div class="search-field"><label class="search-label" for="operation-search">Search operations<input id="operation-search" type="search" placeholder="Try submission, file, calendar…" autocomplete="off" spellcheck="false"></label><button id="clear-search" class="clear-search" type="button" hidden>Clear search</button></div>
 <p id="operation-count" class="catalog-count" aria-live="polite">{len(operations)} of {len(operations)} operations</p></div></section>
-<noscript><p class="wrap catalog-guide">All operations are shown. Use your browser’s Find command to search this page.</p></noscript>
+<p id="catalog-fallback" class="wrap catalog-guide">All operations are shown. Use your browser’s Find command to search this page.</p>
 <section class="wrap operation-list" aria-label="Reviewed operations"><div id="empty-search" class="empty-search" hidden><p>No operations match. Try a broader resource name.</p></div>{"".join(rows)}</section>'''
 
 

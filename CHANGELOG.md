@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Added an original note-sheet mark and neutral light/dark branding, with round
+  translucent navigation and a solid reduced-transparency fallback.
+- Kept copy labels stable and improved selection feedback when clipboard access
+  is denied. Added clear/Escape handling and a no-script catalog fallback.
+- Made documentation section headings linkable and kept navigation clear of
+  the floating header. Added identity and release guidance.
+- Standardized contributor text encoding and line endings. CI now selects the
+  built wheel from project metadata instead of a manually updated filename.
+
 ## 0.1.4 — let your agent set it up
 
 - Put a copyable setup prompt and a short agent-guide link on the homepage.

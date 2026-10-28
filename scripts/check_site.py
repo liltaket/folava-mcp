@@ -47,7 +47,7 @@ def check_theme(page, expected):
             '.theme-control select', '.primary', '.source-type', '.source-meta',
             '.install-band', '.install-band .small', '.code-block', '.copy-button',
             '.operation summary span', '.docs-sidebar a', 'input', '.copy-status',
-            '.agent-setup', '.setup-prompt', '.copy-link'];
+            '.agent-setup', '.setup-prompt', '.copy-link', '.clear-search'];
           return selectors.flatMap(selector => [...document.querySelectorAll(selector)]
             .filter(element => element.getClientRects().length)
             .flatMap(element => {
@@ -239,7 +239,9 @@ def check(site: Path, screenshots: Path | None = None):
             page.get_by_role("combobox", name="Theme").select_option("dark")
             check_theme(page, "dark")
             assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
-        page.goto(ORIGIN + "docs/getting-started/#codex")
+        page.goto(ORIGIN + "docs/getting-started/")
+        page.get_by_role("link", name="Codex", exact=True).click()
+        assert page.url.endswith("#codex")
         heading = page.get_by_role("heading", name="Codex", exact=True)
         expect(heading).to_be_visible()
         bounds = page.locator(".header-inner").bounding_box()

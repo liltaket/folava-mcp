@@ -115,6 +115,11 @@ button:disabled {
     cursor: default
 }
 
+[data-copy][data-copied]::after {
+    content: '✓' / '';
+    margin-left: .4em
+}
+
 button,
 a,
 input,
@@ -801,6 +806,8 @@ td code {
     position: fixed;
     bottom: 20px;
     left: 50%;
+    width: max-content;
+    max-width: min(480px, calc(100% - 32px));
     transform: translateX(-50%);
     background: var(--status);
     color: var(--on-status);
@@ -808,7 +815,7 @@ td code {
     padding: 12px 18px;
     font-size: .8rem;
     z-index: 20;
-    box-shadow: 0 4px 20px #172c4120
+    box-shadow: 0 4px 20px rgb(0 0 0 / 8%)
 }
 
 .copy-status:empty {

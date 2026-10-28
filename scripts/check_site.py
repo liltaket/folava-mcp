@@ -145,6 +145,9 @@ def check(site: Path, screenshots: Path | None = None):
         )
         page.get_by_role("button", name="Copy setup prompt").click()
         expect(page.get_by_role("status")).to_have_text("Setup prompt copied.")
+        expect(page.get_by_role("button", name="Copy setup prompt")).to_have_text(
+            "Copy setup prompt"
+        )
         prompt = page.evaluate("window.copied")
         assert "https://liltaket.github.io/folava-mcp/install.md" in prompt
         assert "demo" in prompt and "credentials outside" in prompt

@@ -980,6 +980,32 @@ td code {
     flex: 1
 }
 
+.search-field {
+    position: relative;
+    flex: 1
+}
+
+.search-field:has(.clear-search:not([hidden])) input {
+    padding-right: 108px
+}
+
+.clear-search {
+    position: absolute;
+    right: 4px;
+    bottom: 2px;
+    min-height: 44px;
+    padding: 7px 12px;
+    border: 0;
+    border-radius: 5px;
+    background: var(--paper);
+    color: var(--link);
+    font-size: .75rem
+}
+
+.clear-search:hover {
+    background: var(--active)
+}
+
 .search-label input {
     display: block;
     width: 100%;

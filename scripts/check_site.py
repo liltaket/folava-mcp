@@ -214,7 +214,12 @@ def check(site: Path, screenshots: Path | None = None):
         theme.select_option("light")
         search.fill("an-operation-that-does-not-exist")
         expect(page.locator("#empty-search")).to_be_visible()
-        search.fill("")
+        page.get_by_role("button", name="Clear search", exact=True).click()
+        expect(search).to_be_focused()
+        expect(page.locator("#empty-search")).to_be_hidden()
+        search.fill("submission")
+        search.press("Escape")
+        expect(search).to_have_value("")
         assert page.locator("[data-operation]:visible").count() == total
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
         page.goto(ORIGIN + "docs/getting-started/")
@@ -329,6 +334,11 @@ def check(site: Path, screenshots: Path | None = None):
             )
             == "dark"
         )
+        no_script_page.goto(ORIGIN + "catalog/")
+        expect(no_script_page.get_by_role("searchbox", name="Search operations")).to_be_hidden()
+        expect(no_script_page.get_by_text("All operations are shown.", exact=False)).to_be_visible()
+        no_script_page.locator("[data-operation]").first.locator("summary").click()
+        expect(no_script_page.locator("details[open]")).to_be_visible()
         no_script.close()
         page.keyboard.press("Tab")
         assert page.locator("main#main").count() == 1

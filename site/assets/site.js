@@ -73,10 +73,12 @@
   });
   const search = document.getElementById('operation-search');
   if (search) {
+    document.getElementById('catalog-controls').hidden = false;
+    const clear = document.getElementById('clear-search');
     const operations = [...document.querySelectorAll('[data-operation]')];
     const count = document.getElementById('operation-count');
     const empty = document.getElementById('empty-search');
-    search.addEventListener('input', () => {
+    const filter = () => {
       const words = search.value.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
       let visible = 0;
       operations.forEach(operation => {
@@ -86,6 +88,20 @@
       });
       count.textContent = `${visible} of ${operations.length} operations`;
       empty.hidden = visible > 0;
+      clear.hidden = search.value.length === 0;
+    };
+    const clearSearch = () => {
+      search.value = '';
+      filter();
+      search.focus();
+    };
+    search.addEventListener('input', filter);
+    clear.addEventListener('click', clearSearch);
+    search.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && search.value) {
+        event.preventDefault();
+        clearSearch();
+      }
     });
   }
 })();

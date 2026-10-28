@@ -206,8 +206,9 @@ Permissions and token scopes still apply. <a href="{ESC(op["docs"])}">Official e
 These {len(operations)} operation IDs come directly from the software’s reviewed registry, including workflow aliases.</p>
 <p class="catalog-guide">Use <code>canvas_discover</code> from your agent for the same catalog.
 Unknown methods, routes and query keys are rejected. <a href="{base}docs/tools/">Read the tool guide</a>.</p>
-<div class="catalog-controls"><label class="search-label" for="operation-search">Search operations<input id="operation-search" type="search" placeholder="Try submission, file, calendar…" autocomplete="off" spellcheck="false"></label>
+<div id="catalog-controls" class="catalog-controls" hidden><div class="search-field"><label class="search-label" for="operation-search">Search operations<input id="operation-search" type="search" placeholder="Try submission, file, calendar…" autocomplete="off" spellcheck="false"></label><button id="clear-search" class="clear-search" type="button" hidden>Clear search</button></div>
 <p id="operation-count" class="catalog-count" aria-live="polite">{len(operations)} of {len(operations)} operations</p></div></section>
+<noscript><p class="wrap catalog-guide">All operations are shown. Use your browser’s Find command to search this page.</p></noscript>
 <section class="wrap operation-list" aria-label="Reviewed operations"><div id="empty-search" class="empty-search" hidden><p>No operations match. Try a broader resource name.</p></div>{"".join(rows)}</section>'''
 
 

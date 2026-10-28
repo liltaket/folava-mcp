@@ -287,6 +287,9 @@ td code {
 }
 
 .site-nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     font-size: .87rem;
     text-decoration: none;
     color: var(--link);
@@ -1157,6 +1160,10 @@ td code {
         overflow: hidden;
         clip-path: inset(50%);
         white-space: nowrap
+    }
+
+    .theme-control select {
+        padding: 7px 22px 7px 8px
     }
 
     html {

@@ -46,6 +46,14 @@ AGENT_PROMPT = (
 )
 
 
+def brand_mark() -> str:
+    return (
+        (ROOT / "site/assets/mark.svg")
+        .read_text(encoding="utf-8")
+        .replace("<svg ", '<svg class="brand-mark" aria-hidden="true" focusable="false" ', 1)
+    )
+
+
 def release_version() -> str:
     version = json.loads(RELEASE_MANIFEST.read_text(encoding="utf-8"))["version"]
     if not isinstance(version, str) or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
@@ -94,7 +102,7 @@ def frame(title: str, content: str, base: str, *, route: str, active: str = "") 
 <link rel="canonical" href="{canonical}"><link rel="icon" href="{base}assets/favicon.svg" type="image/svg+xml">
 <script src="{base}assets/theme.js"></script><link rel="stylesheet" href="{base}assets/site.css"><script defer src="{base}assets/site.js"></script>
 </head><body><a class="skip-link" href="#main">Skip to content</a>
-<header class="site-header"><div class="wrap header-inner"><a class="brand" href="{base}" aria-label="Folava MCP home">folava <span>MCP</span></a>
+<header class="site-header"><div class="wrap header-inner"><a class="brand" href="{base}" aria-label="Folava MCP home">{brand_mark()}folava <span>MCP</span></a>
 <div class="header-controls"><nav class="site-nav" aria-label="Main navigation">{nav("Guide", "docs/getting-started/", "docs")}{nav("API catalog", "catalog/", "catalog")}<a href="{REPO}">GitHub</a></nav>
 <label class="theme-control" hidden for="theme-choice"><span>Theme</span><select id="theme-choice"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label></div></div></header>
 <main id="main" tabindex="-1">{content}</main>
@@ -217,6 +225,7 @@ def build(output: Path, base_path: str = "/folava-mcp/") -> None:
     # Never copy the repository wholesale; only deliberate public assets and docs.
     output.mkdir(parents=True, exist_ok=True)
     shutil.copytree(ROOT / "site" / "assets", output / "assets", dirs_exist_ok=True)
+    shutil.copyfile(ROOT / "site/assets/mark.svg", output / "assets/favicon.svg")
 
     def write(route, title, body, active=""):
         target = output / route
@@ -235,6 +244,7 @@ def build(output: Path, base_path: str = "/folava-mcp/") -> None:
             .replace("{{INSTALL_COMMAND}}", ESC(version_install()))
             .replace("{{AGENT_PROMPT}}", ESC(AGENT_PROMPT))
             .replace("{{SETUP_URL}}", ESC(SETUP_URL))
+            .replace("{{BRAND_MARK}}", brand_mark())
         )
 
     write("index.html", "Your agent, meet Canvas.", home)

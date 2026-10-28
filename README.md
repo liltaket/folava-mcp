@@ -1,3 +1,5 @@
+<p><img src="site/assets/mark.svg" width="44" height="44" alt=""></p>
+
 # Folava MCP
 
 [![CI](https://github.com/liltaket/folava-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/liltaket/folava-mcp/actions/workflows/ci.yml)

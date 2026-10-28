@@ -222,7 +222,7 @@ td code {
 
 .brand {
     display: inline-flex;
-    align-items: baseline;
+    align-items: center;
     gap: 10px;
     text-decoration: none;
     color: var(--ink);
@@ -230,6 +230,13 @@ td code {
     font-weight: 740;
     letter-spacing: -.04em;
     white-space: nowrap
+}
+
+.brand-mark {
+    display: block;
+    width: 28px;
+    height: 28px;
+    flex: none
 }
 
 .brand span {

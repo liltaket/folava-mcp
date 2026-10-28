@@ -42,14 +42,14 @@ not change the site installer.
    wheels from `dist/` first so the artifact count is unambiguous, or build with
    `uv build --out-dir /your/clean/output` and pass that directory to
    `scripts/check_wheel.py --dist /your/clean/output`. Review the
-   wheel file listing with `python -m zipfile -l dist/folava_mcp-VERSION-py3-none-any.whl`
+   wheel file listing with `uv run python -m zipfile -l dist/folava_mcp-VERSION-py3-none-any.whl`
    and the source diff for unintended content; automated text checks cannot
    replace that privacy review.
 5. Record and verify the wheel's SHA-256 before uploading it. For example, this
    Python command works across supported platforms:
 
    ```sh
-   python -c "import hashlib; from pathlib import Path; p = next(Path('dist').glob('*.whl')); print(hashlib.sha256(p.read_bytes()).hexdigest(), p.name)"
+   uv run python -c "import hashlib; from pathlib import Path; p = next(Path('dist').glob('*.whl')); print(hashlib.sha256(p.read_bytes()).hexdigest(), p.name)"
    ```
 
 6. Create the GitHub Release for `vVERSION`, attach the wheel produced from that

@@ -413,7 +413,7 @@ td code {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     padding: 8px 8px 8px 18px;
     margin: 22px 0 14px;
     background: var(--paper);
@@ -1264,7 +1264,6 @@ td code {
 
     .agent-setup {
         padding: 24px;
-        margin-right: 5px
     }
 
     .example-workspace {

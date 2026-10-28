@@ -194,6 +194,10 @@ def check(site: Path, screenshots: Path | None = None):
         for width in (390, 320):
             page.set_viewport_size({"width": width, "height": 900})
             assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
+            assert page.locator(".setup-command code").evaluate(
+                "el => el.getBoundingClientRect().height <= "
+                "parseFloat(getComputedStyle(el).lineHeight) + 1"
+            )
             expect(theme).to_be_visible()
             theme.select_option("dark")
             check_theme(page, "dark")

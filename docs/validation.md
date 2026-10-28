@@ -8,6 +8,8 @@ Local evidence recorded 2026-10-28 on Linux, Python 3.14.4.
 | Automated suite | 187 tests passed, including protocol and local TLS fixtures. |
 | Static site | 14 generated pages; internal links/anchors and catalog match validated. |
 | Chromium interactions | Example tabs/keyboard, copy success/denial, search/details/empty state, docs navigation, 320/390px layout passed. |
+| Hosted CI | All six platform jobs passed on [c411188](https://github.com/liltaket/folava-mcp/actions/runs/40761276825), including Windows refresh concurrency and macOS callback tests. |
+| Public site | Real-network Chromium checks passed for the deployed homepage, tabs, catalog and guide in mobile layout. |
 | Static checks | Ruff lint and formatting passed. |
 | Distribution build | Wheel and source distribution built successfully. |
 | Standalone wheel | Installed outside the source tree; CLI help and official SDK stdio course call passed. |

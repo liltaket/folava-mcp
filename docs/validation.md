@@ -1,6 +1,21 @@
 # Validation evidence
 
-Evidence recorded 2026-10-28. Current 0.1.3 local evidence on Linux,
+## 0.1.4 follow-up
+
+- 254 software tests passed; Ruff lint and formatting passed.
+- The site builds 16 pages and a 94-operation catalog. Chromium checks include
+  copying the actual agent prompt and guide link, clipboard-denial selection,
+  theme persistence, contrast, keyboard use and 320/390px layouts.
+- The plain-text installation guide is checked against its canonical source and
+  the selected published wheel command. Its demo calls were exercised locally;
+  no external host UI installation is inferred from those calls.
+- Public text is scanned for common credential, private-path and email patterns.
+  Manual review also covers account/institution associations and fictional data.
+  Automated checks are tripwires, not proof that all personal data is absent.
+
+## Earlier software evidence
+
+Evidence recorded 2026-10-28. The 0.1.3 local baseline on Linux,
 Python 3.14.4:
 
 | Check | Evidence |
@@ -82,7 +97,12 @@ content now uses metadata and the fixed `public_url` API pointer, allowing only
 audited AWS S3 REST destinations without Canvas authorization or cookies. UI,
 InstFS, CDN, custom and local-storage fallback downloads are refused.
 
-Limited private checks exercised permitted reads and stdio. A module comparison was inconclusive; its type and cause were not established. Institution and account details are omitted.
+Limited private deployment checks exercised permitted reads and an actual
+SDK stdio connection. One module-requirement comparison was inconclusive; neither
+its type nor cause could be established. Direct page/front-page reads were
+conservatively excluded, alongside individual revision reads with an upstream
+record-repair branch. Collection bodies and revision-list metadata remain
+available where permitted. Account, institution and resource details are omitted.
 
 Canvas may update ordinary access logs and refresh derived progress caches even
 on GET. These samples are not a complete account crawl or proof of an unchanged

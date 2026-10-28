@@ -1,5 +1,13 @@
 # Getting started
 
+## Let your agent help
+
+Send your agent [this setup link](https://liltaket.github.io/folava-mcp/install.md)
+and ask it to install Folava MCP. It can install the published release, preserve
+your existing MCP configuration and connect the synthetic demo. Your account
+connection happens separately, with credentials kept outside the conversation.
+The homepage has a ready-to-copy prompt; the manual steps are below.
+
 You need Python 3.11 or newer and an MCP host that can launch a stdio command.
 [uv](https://docs.astral.sh/uv/getting-started/installation/) manages an isolated
 tool installation on Linux, macOS and Windows. No Node runtime is required.

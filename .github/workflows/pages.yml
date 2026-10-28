@@ -23,6 +23,7 @@ jobs:
           enable-cache: true
       - run: uv sync --frozen --group web
       - run: uv run python scripts/build_site.py
+      - run: uv run python scripts/check_public.py --site _site
       - name: Verify installer is published before deploying
         if: github.ref == 'refs/heads/main'
         run: uv run python scripts/build_site.py --verify-release

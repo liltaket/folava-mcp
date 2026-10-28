@@ -11,6 +11,15 @@ or find a course attachment—without giving an agent the ability to submit work
 [Project site](https://liltaket.github.io/folava-mcp/) · [Getting started](docs/getting-started.md) · [Tools](docs/tools.md) ·
 [Authentication](docs/authentication.md) · [Architecture](docs/architecture.md)
 
+**Let your agent set it up.** Copy this into your conversation:
+
+> Set up Folava MCP using https://liltaket.github.io/folava-mcp/install.md.
+> Install the published release and connect the demo first, then guide me through
+> connecting Canvas. Keep credentials outside this conversation.
+
+The [agent setup guide](docs/agent-setup.md) covers installation, existing MCP
+configuration, demo checks and the separate account connection.
+
 ```text
 You       What do I need for the fieldwork seminar?
 Agent     Reads the course outline, assignment and attached field guide.

@@ -2,7 +2,7 @@
 
 A personal study tool should read like a useful course handout, with the precision
 of a developer reference. The homepage explains the job, demonstrates a synthetic
-student question, and gets someone to an actual install command. Documentation
+student question, and gets someone to a working agent setup. Documentation
 and the operation explorer stay one click away.
 
 Light palette: paper #ffffff, fog #f2f5f9, ink #172c41, study blue #2155cd,
@@ -14,10 +14,14 @@ in both modes. No gradient decoration or stock imagery.
 Type: locally available humanist system sans (Aptos/Segoe UI), comfortably spaced
 body text, strong slightly condensed headings, monospace only for executable code.
 
-Desktop layout: left-aligned large statement and a tangible coursework example;
-full-width installation band; then asymmetric workflow/reference sections. Mobile
-stacks in reading order. The memorable element is the actual study example,
-which switches between dates, feedback and a file, explicitly marked synthetic.
+Desktop layout: a left-aligned invitation and an immediately usable setup note.
+The adjacent panel contains a real copyable prompt and a separate plain-text
+guide link, rather than a simulated agent conversation. The blue installation
+band offers manual commands; a quieter section below demonstrates synthetic
+coursework. Mobile stacks in reading order, with an anchor to the setup panel.
+The copy action, original source-sheet example and plain guide all work without
+depending on a live account. The agent guide starts with a demo and treats real
+authentication as a separate private step.
 
 Critique before building: discard the usual simulated chat window with typing
 animation, feature-card grid and inflated statistics. Use a quiet source-sheet
@@ -31,7 +35,7 @@ styles load. If storage is blocked, the selector still works for the current
 page and defaults to the system again on navigation. Without JavaScript, the
 reading surface follows the OS and the unavailable control stays hidden.
 
-Motion is restrained: the source sheet arrives once with a half-second,
+Motion is restrained: the setup note arrives once with a half-second,
 seven-pixel fade; underlined links respond with a brief underline transition.
 No looping motion, scroll effects or staggered section reveals. Reduced-motion preferences
 disable all authored animation and transitions. Native keyboard behavior,

@@ -1,13 +1,28 @@
 <section class="hero wrap">
   <div class="hero-copy">
-    <p class="release-note">A personal Canvas connection for your agents</p>
-    <h1>Your courses.<br>Within reach.</h1>
-    <p class="lead">Bring assignments, course material and feedback into the conversation you’re already having.</p>
-    <p>Folava connects your agent to Canvas, with a deliberately read-only boundary. You stay in control of submissions, messages and changes.</p>
-    <div class="actions"><a class="button primary" href="#install">Get started</a><a class="text-link" href="{{BASE}}docs/getting-started/">Read the guide</a></div>
+    <p class="release-note">Canvas, with a little help from your agent</p>
+    <h1>Your agent,<br>meet Canvas.</h1>
+    <p class="lead">Bring your courses, deadlines and feedback into the conversation.</p>
+    <p>Already using Codex, T3 Code or another agent? Give it the setup note. It can install Folava and connect a practice workspace, then help you connect Canvas.</p>
+    <div class="actions"><a class="button primary" href="#agent-setup">Set up with your agent</a><a class="text-link" href="#install">I’ll do it myself</a></div>
     <p class="small muted">Open source. Runs on your computer. No Folava account.</p>
   </div>
-  <div class="sample" aria-labelledby="sample-title">
+  <aside id="agent-setup" tabindex="-1" class="agent-setup" aria-labelledby="agent-setup-title">
+    <h2 id="agent-setup-title">Let your agent handle setup.</h2>
+    <p class="muted">Copy this into your conversation. It has the link and the next steps.</p>
+    <p id="setup-prompt" class="setup-prompt">{{AGENT_PROMPT}}</p>
+    <button id="copy-setup-prompt" class="button primary setup-copy" data-copy data-copy-target="setup-prompt" data-copy-label="Setup prompt" hidden>Copy setup prompt</button>
+    <p class="setup-link-label">Just need the link?</p>
+    <div class="setup-link"><a id="setup-link" href="{{BASE}}install.md">{{SETUP_URL}}</a><button class="copy-link" data-copy data-copy-target="setup-link" data-copy-label="Setup link" hidden>Copy link</button></div>
+    <p class="small muted setup-note">Starts with demo data. You connect your own account privately when you’re ready.</p>
+    <noscript><p class="small">Select the setup text to copy it, or <a href="{{BASE}}install.md">open the agent guide</a>.</p></noscript>
+  </aside>
+</section>
+<section id="install" class="install-band">
+  <div class="wrap install-grid"><div><h2>Prefer a terminal?<br>You’re covered.</h2><p>Install with <a href="https://docs.astral.sh/uv/getting-started/installation/">uv</a>, then try the demo with Codex. No Canvas account or credentials needed.</p><a class="light-link" href="{{BASE}}docs/authentication/">Connect your real account</a></div>
+  <div class="install-commands"><p class="step-label">Install the preview</p><div class="code-block"><pre><code>{{INSTALL_COMMAND}}</code></pre><button class="copy-button" data-copy hidden aria-label="Copy installation command">Copy</button></div><p class="step-label">Try it with Codex</p><div class="code-block"><pre><code>codex mcp add canvas-demo -- folava-mcp serve --demo</code></pre><button class="copy-button" data-copy hidden aria-label="Copy demo connection command">Copy</button></div><p class="small">Python 3.11+ · Linux, macOS and Windows · v{{VERSION}}</p></div></div>
+</section>
+<section class="wrap example-workspace" aria-labelledby="example-title"><div class="section-intro"><h2 id="example-title">A little less digging<br>through course tabs.</h2><p>Ask a question. Let your agent gather the instructions, dates and available feedback, with links back to Canvas.</p><p class="muted small">Here’s a made-up course to show how it fits together. No student account is connected to this website.</p></div><div class="sample" aria-labelledby="sample-title">
     <div class="sample-heading"><span class="sample-symbol" aria-hidden="true">f</span><div><p id="sample-title">A little context goes a long way.</p><p class="small muted">Synthetic example workspace</p></div></div>
     <div class="example-tabs" role="tablist" aria-label="Example workflows">
       <button role="tab" id="tab-week" aria-controls="example-week" aria-selected="true" tabindex="0" data-example="week">This week</button>
@@ -32,14 +47,10 @@
     </div>
   </div>
 </section>
-<section id="install" class="install-band">
-  <div class="wrap install-grid"><div><h2>A few commands.<br>Your own environment.</h2><p>Install with <a href="https://docs.astral.sh/uv/getting-started/installation/">uv</a>, then connect a synthetic workspace to Codex. No Canvas credentials needed for the demo.</p><a class="light-link" href="{{BASE}}docs/authentication/">Connect your real account</a></div>
-  <div class="install-commands"><p class="step-label">Install the preview</p><div class="code-block"><pre><code>{{INSTALL_COMMAND}}</code></pre><button class="copy-button" data-copy hidden aria-label="Copy installation command">Copy</button></div><p class="step-label">Try it with Codex</p><div class="code-block"><pre><code>codex mcp add canvas-demo -- folava-mcp serve --demo</code></pre><button class="copy-button" data-copy hidden aria-label="Copy demo connection command">Copy</button></div><p class="small">Python 3.11+ · Linux, macOS and Windows · v{{VERSION}}</p></div></div>
-</section>
-<section class="wrap workflows" aria-labelledby="workflows-title"><div class="section-intro"><h2 id="workflows-title">Make sense of<br>the week ahead.</h2><p>Use a small set of tools for common questions. Reach deeper through a searchable catalog of reviewed reads.</p><a class="text-link" href="{{BASE}}catalog/">Explore the API catalog</a></div><div class="workflow-list">
-  <article><h3>Plan the week</h3><p>Bring planner items, course calendar events and assignment deadlines into view. Completeness and permission errors stay explicit.</p></article>
-  <article><h3>Read with the source nearby</h3><p>Follow modules to pages, instructions, files and your own submissions. Keep the Canvas IDs and links when explaining the material.</p></article>
-  <article><h3>Notice what changed</h3><p>Poll a collection and replay its change events after a cursor. Your scheduler can start an agent; Folava doesn’t run commands from course content.</p><a href="{{BASE}}docs/events/">Work with the change feed</a></article>
+<section class="wrap workflows" aria-labelledby="workflows-title"><div class="section-intro"><h2 id="workflows-title">Make sense of<br>the week ahead.</h2><p>Start with what you need to know. Folava gives your agent a small set of tools for everyday course questions.</p><a class="text-link" href="{{BASE}}catalog/">Explore the API catalog</a></div><div class="workflow-list">
+  <article><h3>Plan the week</h3><p>Ask what’s due next week. Your agent can gather assignment deadlines and events published in Canvas, and tell you when something is unavailable.</p></article>
+  <article><h3>Read with the source nearby</h3><p>Read the instructions alongside your feedback and available course files. Original links stay close so you can check the details in Canvas.</p></article>
+  <article><h3>Notice what changed</h3><p>Connect the change feed to your own scheduler to notice new announcements or updated work. Folava provides the events; your runner decides when an agent starts.</p><a href="{{BASE}}docs/events/">Work with the change feed</a></article>
 </div></section>
-<section class="wrap boundary"><div><h2>Useful access.<br>A clear boundary.</h2><p>The resource client only sends reviewed GET requests. It rejects uploads, submissions, arbitrary destinations and options that mark content as read.</p></div><div><p>Credentials are configured outside the conversation and kept in your OS keyring or a protected secret source. Folava has no telemetry or model SDK.</p><p>Your MCP host may share selected course material with its model provider. Choose a host appropriate for your institution and your data.</p><a href="{{BASE}}docs/privacy/">Read about data handling</a></div></section>
+<section class="wrap boundary"><div><h2>Your courses.<br>Your call.</h2><p>The resource client only sends reviewed GET requests. It rejects uploads, submissions, arbitrary destinations and options that mark content as read.</p></div><div><p>Credentials are configured outside the conversation and kept in your OS keyring or a protected secret source. Folava has no telemetry or model SDK.</p><p>Your MCP host may share selected course material with its model provider. Choose a host appropriate for your institution and your data.</p><a href="{{BASE}}docs/privacy/">Read about data handling</a></div></section>
 <section class="wrap preview-note"><h2>Know what you’re installing</h2><p>This is an independent development preview. Access depends on your account permissions, OAuth scopes and institution. Instructure’s current policy explicitly addresses MCP approval; that approval has not been obtained for this project. <a href="{{BASE}}docs/release-readiness/">Read the deployment limits.</a></p><p>Canvas remains the source of truth. External timetables, locked content and third-party LTI tools may not be accessible.</p></section>

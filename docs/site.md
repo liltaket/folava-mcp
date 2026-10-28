@@ -11,9 +11,16 @@ and `operations.json` directly from the operation registry. Built files go to
 `_site/`, which is ignored by Git. There is no second copy of the API catalog or
 user documentation to maintain.
 
+The homepage's agent prompt points to `/install.md`, a deliberate plain-text copy
+of `docs/agent-setup.md`. The same source renders as a normal documentation page.
+Only this Markdown file is copied into the public build; private working files
+are never copied wholesale. The guide's pinned installer must match the release
+manifest, which the static tests enforce.
+
 ```sh
 uv sync --frozen --group web
 uv run python scripts/build_site.py
+uv run python scripts/check_public.py --site _site
 uv run playwright install chromium
 uv run python scripts/check_site.py
 ```

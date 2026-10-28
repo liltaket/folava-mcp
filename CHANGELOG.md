@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.4 — let your agent set it up
+
+- Put a copyable setup prompt and a short agent-guide link on the homepage.
+  Installation starts with the synthetic demo and preserves existing host config;
+  the person's Canvas authentication remains a separate private step.
+- Added a plain Markdown installation entry point and the matching readable guide.
+  Manual terminal commands remain available alongside the agent flow.
+- Made homepage language friendlier while preserving both themes, keyboard access
+  and reduced-motion behavior.
+- Anonymized validation narratives and removed institution and local-machine
+  details from current public documentation and package metadata.
+- Added publication checks for common credential/email/private-path patterns.
+  These checks supplement manual privacy review and do not prove that historical
+  copies or all personal information are absent.
+
 ## 0.1.3 — stricter reads and coherent themes
 
 Upgrade from earlier previews before connecting a real account. HTTP GET alone

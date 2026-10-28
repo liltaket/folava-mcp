@@ -35,7 +35,8 @@ def check_theme(page, expected):
           const selectors = ['body', '.muted', '.site-nav a', '.theme-control',
             '.theme-control select', '.primary', '.source-type', '.source-meta',
             '.install-band', '.install-band .small', '.code-block', '.copy-button',
-            '.operation summary span', '.docs-sidebar a', 'input', '.copy-status'];
+            '.operation summary span', '.docs-sidebar a', 'input', '.copy-status',
+            '.agent-setup', '.setup-prompt', '.copy-link'];
           return selectors.flatMap(selector => [...document.querySelectorAll(selector)]
             .filter(element => element.getClientRects().length)
             .flatMap(element => {
@@ -86,7 +87,7 @@ def check(site: Path, screenshots: Path | None = None):
         page = context.new_page()
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(ORIGIN)
-        expect(page.get_by_role("heading", level=1)).to_have_text("Your courses.Within reach.")
+        expect(page.get_by_role("heading", level=1)).to_have_text("Your agent,meet Canvas.")
         theme = page.get_by_role("combobox", name="Theme")
         expect(theme).to_have_value("system")
         check_theme(page, "light")
@@ -131,6 +132,14 @@ def check(site: Path, screenshots: Path | None = None):
         page.evaluate(
             "() => {navigator.clipboard.writeText = async text => {window.copied = text};}"
         )
+        page.get_by_role("button", name="Copy setup prompt").click()
+        expect(page.get_by_role("status")).to_have_text("Setup prompt copied.")
+        prompt = page.evaluate("window.copied")
+        assert "https://liltaket.github.io/folava-mcp/install.md" in prompt
+        assert "demo" in prompt and "credentials outside" in prompt
+        page.get_by_role("button", name="Copy link", exact=True).click()
+        assert page.evaluate("window.copied") == "https://liltaket.github.io/folava-mcp/install.md"
+        expect(page.get_by_role("status")).to_have_text("Setup link copied.")
         page.get_by_role("button", name="Copy installation command").click()
         expect(page.get_by_role("status")).to_have_text("Command copied.")
         check_theme(page, "light")
@@ -143,6 +152,13 @@ def check(site: Path, screenshots: Path | None = None):
         page.evaluate(
             "() => {navigator.clipboard.writeText = async () => {throw new Error('denied')};}"
         )
+        page.reload()
+        page.evaluate(
+            "() => {navigator.clipboard.writeText = async () => {throw new Error('denied')};}"
+        )
+        page.get_by_role("button", name="Copy setup prompt").click()
+        expect(page.get_by_role("status")).to_contain_text("copy it manually")
+        assert page.evaluate("window.getSelection().toString()") == prompt
         page.get_by_role("button", name="Copy demo connection command").click()
         expect(page.get_by_role("status")).to_contain_text("copy it manually")
         assert (
@@ -223,7 +239,9 @@ def check(site: Path, screenshots: Path | None = None):
         page.goto(ORIGIN)
         page.emulate_media(reduced_motion="reduce")
         assert (
-            page.locator(".sample").evaluate("element => getComputedStyle(element).animationName")
+            page.locator(".agent-setup").evaluate(
+                "element => getComputedStyle(element).animationName"
+            )
             == "none"
         )
         assert (
@@ -235,13 +253,15 @@ def check(site: Path, screenshots: Path | None = None):
         page.emulate_media(reduced_motion="no-preference")
         page.reload()
         assert (
-            page.locator(".sample").evaluate(
+            page.locator(".agent-setup").evaluate(
                 "element => getComputedStyle(element).animationIterationCount"
             )
             == "1"
         )
         assert (
-            page.locator(".sample").evaluate("element => getComputedStyle(element).animationName")
+            page.locator(".agent-setup").evaluate(
+                "element => getComputedStyle(element).animationName"
+            )
             == "sample-arrive"
         )
         if screenshots:

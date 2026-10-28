@@ -1,5 +1,10 @@
 # Data handling
 
+The project website is static. Its course examples are fictional, and it does
+not connect to a student account or accept credentials. GitHub Pages still has
+its own hosting and access-log behavior. Public documentation omits private
+account, institution and local-machine details from validation reports.
+
 The connector has no telemetry, analytics, advertising SDK, model SDK or hosted
 Folava backend. It makes requested Canvas reads, attachment requests through API
 pointers and S3, and explicit credential lifecycle requests. Normal DNS, TLS and Canvas

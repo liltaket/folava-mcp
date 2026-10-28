@@ -59,8 +59,12 @@ def test_site_build_links_and_catalog_match_software(tmp_path, base_path):
             if url.fragment and target in pages:
                 assert unquote(url.fragment) in pages[target].ids, (page, link)
     assert all(
-        path.suffix not in (".sqlite", ".py", ".md") for path in output.rglob("*") if path.is_file()
+        path.suffix not in (".sqlite", ".py", ".md") or path == output / "install.md"
+        for path in output.rglob("*")
+        if path.is_file()
     )
+    assert (output / "install.md").read_text() == (ROOT / "docs/agent-setup.md").read_text()
+    assert BUILD["version_install"]() in (output / "install.md").read_text()
 
 
 def test_reject_dangerous_site_output_and_base(tmp_path):

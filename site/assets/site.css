@@ -289,7 +289,7 @@ td code {
 .hero {
     display: grid;
     grid-template-columns: 1fr 1.05fr;
-    gap: 75px;
+    gap: 60px;
     align-items: center;
     padding-block: 88px 100px
 }
@@ -328,6 +328,85 @@ td code {
     font-weight: 630;
     text-decoration: none;
     min-height: 48px
+}
+
+.agent-setup {
+    padding: 30px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: var(--fog);
+    box-shadow: 10px 14px 0 var(--sample-shadow);
+    min-width: 0
+}
+
+.agent-setup h2 {
+    font-size: 1.5rem;
+    line-height: 1.25
+}
+
+.agent-setup>p {
+    font-size: .9rem
+}
+
+.setup-prompt {
+    padding: 20px;
+    margin: 24px 0 18px;
+    background: var(--paper);
+    border-left: 3px solid var(--quote-line);
+    line-height: 1.65;
+    overflow-wrap: anywhere
+}
+
+.setup-copy {
+    border: 0;
+    width: 100%;
+    cursor: pointer
+}
+
+.setup-link-label {
+    margin: 24px 0 6px;
+    font-weight: 600
+}
+
+.setup-link {
+    display: flex;
+    align-items: center;
+    gap: 12px
+}
+
+.setup-link a {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: .79rem
+}
+
+.copy-link {
+    flex: none;
+    padding: 8px 12px;
+    min-height: 44px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--paper);
+    color: var(--blue);
+    font-size: .75rem;
+    cursor: pointer
+}
+
+.copy-link:hover {
+    background: var(--active)
+}
+
+.agent-setup .setup-note {
+    margin: 20px 0 0;
+    font-size: .78rem
+}
+
+.example-workspace {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    align-items: center;
+    gap: 85px;
+    padding-block: 90px 12px
 }
 
 .primary {
@@ -955,6 +1034,7 @@ td code {
     .hero {
         padding-block: 110px 120px
     }
+
 }
 
 @media(max-width:950px) {
@@ -1027,7 +1107,19 @@ td code {
     }
 
     .hero h1 {
-        font-size: 3.7rem
+        font-size: 3.15rem
+    }
+
+    .agent-setup {
+        padding: 24px;
+        box-shadow: 5px 8px 0 var(--sample-shadow);
+        margin-right: 5px
+    }
+
+    .example-workspace {
+        grid-template-columns: 1fr;
+        gap: 28px;
+        padding-block: 50px 0
     }
 
     .hero-copy>p:not(.release-note) {
@@ -1180,7 +1272,7 @@ td code {
         transition: text-underline-offset .15s
     }
 
-    .hero .sample {
+    .hero .agent-setup {
         animation: sample-arrive .5s ease-out both
     }
 

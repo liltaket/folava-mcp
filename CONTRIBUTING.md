@@ -3,6 +3,10 @@
 Start with a focused issue describing the student workflow, expected behavior and
 an anonymized reproduction. Never include credentials, signed URLs, course bodies,
 private submission material or another student's information.
+Use fictional course fixtures and generic institution origins. Omit account-linked
+test counts/dates, local machine names and personal paths from public evidence.
+Run `uv run python scripts/check_public.py` before publishing. Its common-pattern
+checks supplement manual review; they cannot identify all personal information.
 
 ```sh
 uv sync --frozen

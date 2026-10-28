@@ -23,6 +23,7 @@ REPO = "https://github.com/liltaket/folava-mcp"
 SITE = "https://liltaket.github.io/folava-mcp/"
 DOCUMENTS = {
     "getting-started": ("Get started", "docs/getting-started.md"),
+    "agent-setup": ("Set up with your agent", "docs/agent-setup.md"),
     "authentication": ("Authentication", "docs/authentication.md"),
     "tools": ("Tools and files", "docs/tools.md"),
     "events": ("Change feed", "docs/events.md"),
@@ -37,6 +38,12 @@ DOCUMENTS = {
 }
 RELEASE_MANIFEST = ROOT / "site" / "release.json"
 ESC = html.escape
+SETUP_URL = SITE + "install.md"
+AGENT_PROMPT = (
+    f"Set up Folava MCP using {SETUP_URL}. "
+    "Install the published release, connect its demo to my MCP client, and check that it works. "
+    "Then guide me through connecting Canvas; keep credentials outside this conversation."
+)
 
 
 def release_version() -> str:
@@ -226,9 +233,11 @@ def build(output: Path, base_path: str = "/folava-mcp/") -> None:
             .replace("{{BASE}}", base)
             .replace("{{VERSION}}", release_version())
             .replace("{{INSTALL_COMMAND}}", ESC(version_install()))
+            .replace("{{AGENT_PROMPT}}", ESC(AGENT_PROMPT))
+            .replace("{{SETUP_URL}}", ESC(SETUP_URL))
         )
 
-    write("index.html", "Your courses. Within reach.", home)
+    write("index.html", "Your agent, meet Canvas.", home)
     write("catalog/index.html", "API catalog", catalog_page, "catalog")
     for slug, (title, _) in DOCUMENTS.items():
         write(
@@ -246,6 +255,8 @@ def build(output: Path, base_path: str = "/folava-mcp/") -> None:
         ),
     )
     (output / ".nojekyll").touch()
+    # A deliberate, public plain-text entry point for agent-driven installation.
+    shutil.copyfile(ROOT / "docs" / "agent-setup.md", output / "install.md")
     (output / "operations.json").write_text(
         json.dumps(discover(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )

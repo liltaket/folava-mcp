@@ -13,14 +13,20 @@
   let clearStatus;
   document.querySelectorAll('[data-copy]').forEach(button => {
     button.hidden = false;
+    const originalLabel = button.textContent;
+    let resetLabel;
     button.addEventListener('click', async () => {
-      const code = button.closest('.code-block').querySelector('code');
+      const code = button.dataset.copyTarget
+        ? document.getElementById(button.dataset.copyTarget)
+        : button.closest('.code-block').querySelector('code');
+      const label = button.dataset.copyLabel || 'Command';
       try {
         if (!navigator.clipboard?.writeText) throw new Error('clipboard unavailable');
         await navigator.clipboard.writeText(code.textContent);
         button.textContent = 'Copied';
-        status.textContent = 'Command copied.';
-        setTimeout(() => { button.textContent = 'Copy'; }, 1800);
+        status.textContent = label + ' copied.';
+        clearTimeout(resetLabel);
+        resetLabel = setTimeout(() => { button.textContent = originalLabel; }, 1800);
       } catch {
         const range = document.createRange();
         range.selectNodeContents(code);

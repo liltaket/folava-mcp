@@ -11,6 +11,10 @@ and `operations.json` directly from the operation registry. Built files go to
 `_site/`, which is ignored by Git. There is no second copy of the API catalog or
 user documentation to maintain.
 
+Styles, scripts and the generated favicon use content-derived URL versions so a
+fresh page can request the matching assets after a deployment. The version is a
+hash of the public asset, with no visitor or account identifier.
+
 The homepage's agent prompt points to `/install.md`, a deliberate plain-text copy
 of `docs/agent-setup.md`. The same source renders as a normal documentation page.
 Only this Markdown file is copied into the public build; private working files

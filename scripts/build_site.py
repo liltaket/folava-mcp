@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import html
 import json
 import re
@@ -56,6 +57,12 @@ def brand_mark() -> str:
     )
 
 
+def asset_url(base: str, name: str) -> str:
+    source = "mark.svg" if name == "favicon.svg" else name
+    digest = hashlib.sha256((ROOT / "site/assets" / source).read_bytes()).hexdigest()[:12]
+    return f"{base}assets/{name}?v={digest}"
+
+
 def release_version() -> str:
     version = json.loads(RELEASE_MANIFEST.read_text(encoding="utf-8"))["version"]
     if not isinstance(version, str) or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
@@ -101,8 +108,8 @@ def frame(title: str, content: str, base: str, *, route: str, active: str = "") 
 <title>{ESC(title)} · Folava MCP</title>
 <meta name="description" content="Read-only Canvas LMS access for your agents. Install Folava MCP, explore the tools, and connect your own environment.">
 <meta name="theme-color" content="#ffffff"><meta name="color-scheme" content="light dark">
-<link rel="canonical" href="{canonical}"><link rel="icon" href="{base}assets/favicon.svg" type="image/svg+xml">
-<script src="{base}assets/theme.js"></script><link rel="stylesheet" href="{base}assets/site.css"><script defer src="{base}assets/site.js"></script>
+<link rel="canonical" href="{canonical}"><link rel="icon" href="{asset_url(base, "favicon.svg")}" type="image/svg+xml">
+<script src="{asset_url(base, "theme.js")}"></script><link rel="stylesheet" href="{asset_url(base, "site.css")}"><script defer src="{asset_url(base, "site.js")}"></script>
 </head><body><a class="skip-link" href="#main">Skip to content</a>
 <header class="site-header"><div class="wrap header-inner"><a class="brand" href="{base}" aria-label="Folava MCP home">{brand_mark()}folava <span>MCP</span></a>
 <div class="header-controls"><nav class="site-nav" aria-label="Main navigation">{nav("Guide", "docs/getting-started/", "docs")}{nav("API catalog", "catalog/", "catalog")}<a href="{REPO}">GitHub</a></nav>

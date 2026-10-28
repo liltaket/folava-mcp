@@ -106,3 +106,17 @@ def test_section_links_preserve_existing_markdown_heading_links(tmp_path):
     parsed.feed(BUILD["markdown_document"](source, "./"))
     assert len(parsed.ids) == 1
     assert parsed.links == ["https://example.org/"]
+
+
+def test_public_asset_urls_are_stable_until_the_asset_changes(tmp_path, monkeypatch):
+    assets = tmp_path / "site/assets"
+    assets.mkdir(parents=True)
+    source = assets / "site.css"
+    source.write_text("body { color: black }", encoding="utf-8")
+    monkeypatch.setitem(BUILD["asset_url"].__globals__, "ROOT", tmp_path)
+    first = BUILD["asset_url"]("/folava-mcp/", "site.css")
+    assert BUILD["asset_url"]("/folava-mcp/", "site.css") == first
+    source.write_text("body { color: white }", encoding="utf-8")
+    changed = BUILD["asset_url"]("/folava-mcp/", "site.css")
+    assert changed != first
+    assert urlsplit(changed).path == urlsplit(first).path == "/folava-mcp/assets/site.css"

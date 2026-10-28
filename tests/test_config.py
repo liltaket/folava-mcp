@@ -124,3 +124,38 @@ def test_auth_and_resource_origin_port_policy_agree():
         assert normalize_origin(origin) == validate_origin(origin)
     with pytest.raises(ConfigError):
         normalize_origin("https://canvas.example:8443")
+
+
+def test_failed_atomic_replace_preserves_config_and_removes_temporary_file(tmp_path, monkeypatch):
+    from folava_mcp import config
+
+    original = Profile("https://school.example", "personal-token", "a" * 32, "42")
+    save_profile("school", original)
+
+    def fail(*args):
+        raise OSError("simulated rename failure")
+
+    monkeypatch.setattr(config.os, "replace", fail)
+    with pytest.raises(OSError):
+        save_profile("new", Profile("https://other.example", "personal-token", "b" * 32, "99"))
+    assert load_profile("school") == original
+    assert not list((tmp_path / "config").glob(".profiles-*"))
+    with pytest.raises(ConfigError):
+        load_profile("new")
+
+
+@pytest.mark.parametrize("no_follow_flag", [False, True])
+def test_profile_lock_does_not_follow_symlink(tmp_path, monkeypatch, no_follow_flag):
+    from folava_mcp import config
+    from folava_mcp.config import ensure_private_dir, profile_lock
+
+    directory = ensure_private_dir()
+    target = tmp_path / "untouched"
+    target.write_bytes(b"private original")
+    (directory / ".profile-school.lock").symlink_to(target)
+    if not no_follow_flag:
+        monkeypatch.setattr(config.os, "O_NOFOLLOW", 0, raising=False)
+    with pytest.raises((OSError, ConfigError)):
+        with profile_lock("school"):
+            pytest.fail("Symlink lock was accepted")
+    assert target.read_bytes() == b"private original"

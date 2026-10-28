@@ -175,6 +175,8 @@ def profile_lock(name: str, *, metadata: bool = False) -> Iterator[None]:
     """Serialize refresh/config changes across locally launched MCP processes."""
     validate_profile_name(name)
     path = ensure_private_dir() / (".metadata.lock" if metadata else f".profile-{name}.lock")
+    if path.is_symlink():
+        raise ConfigError("Profile lock must not be a symbolic link.")
     descriptor = os.open(path, os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0), 0o600)
     with os.fdopen(descriptor, "r+b") as stream:
         if os.name == "nt":

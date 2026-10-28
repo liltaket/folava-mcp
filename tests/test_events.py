@@ -98,3 +98,138 @@ def test_volatile_file_signatures_do_not_create_changes(tmp_path):
             )
             == []
         )
+
+
+def test_meaningful_url_query_and_fragment_changes_emit_events(tmp_path):
+    path = tmp_path / "events.db"
+
+    def record(url):
+        return record_snapshot(
+            path, scope="s", operation="pages", complete=True, items=[{"id": 1, "url": url}]
+        )
+
+    assert record("https://example.edu/material?lesson=1#part-one") == []
+    assert [e["kind"] for e in record("https://example.edu/material?lesson=2#part-one")] == [
+        "changed"
+    ]
+    assert [e["kind"] for e in record("https://example.edu/material?lesson=2#part-two")] == [
+        "changed"
+    ]
+
+
+def test_storage_failure_rolls_back_events_snapshot_and_revision(tmp_path):
+    path = tmp_path / "events.db"
+    record_snapshot(path, scope="s", operation="courses", items=[{"id": 1}], complete=True)
+    with sqlite3.connect(path) as db:
+        db.execute(
+            "CREATE TRIGGER simulated_failure BEFORE INSERT ON events "
+            "BEGIN SELECT RAISE(ABORT, 'simulated disk error'); END"
+        )
+    with pytest.raises(sqlite3.IntegrityError):
+        record_snapshot(path, scope="s", operation="courses", items=[{"id": 2}], complete=True)
+    with sqlite3.connect(path) as db:
+        assert db.execute("SELECT revision FROM scopes WHERE id='s'").fetchone() == (1,)
+        assert db.execute("SELECT entity FROM snapshots WHERE scope='s'").fetchall() == [("1",)]
+        db.execute("DROP TRIGGER simulated_failure")
+    assert read_events(path) == []
+    events = record_snapshot(path, scope="s", operation="courses", items=[{"id": 2}], complete=True)
+    assert {event["kind"] for event in events} == {"created", "removed"}
+    assert read_events(path) == events
+
+
+def test_concurrent_same_snapshot_commits_one_change(tmp_path):
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+
+    path = tmp_path / "events.db"
+    record_snapshot(path, scope="s", operation="courses", items=[{"id": 1}], complete=True)
+    barrier = threading.Barrier(4)
+
+    def update():
+        barrier.wait(timeout=2)
+        return record_snapshot(
+            path,
+            scope="s",
+            operation="courses",
+            items=[{"id": 1, "name": "changed"}],
+            complete=True,
+        )
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        batches = list(executor.map(lambda _: update(), range(4)))
+    events = [event for batch in batches for event in batch]
+    assert len(events) == 1
+    assert events[0]["kind"] == "changed"
+    assert read_events(path) == events
+
+
+async def test_poll_failure_restart_and_exact_query_identity(tmp_path):
+    from folava_mcp.events import poll_once
+
+    class Client:
+        origin = "https://canvas.example"
+        user_id = 42
+        items = [{"id": 1, "name": "original"}]
+        complete = True
+        error = None
+
+        async def read(self, operation, *args, **kwargs):
+            if operation == "profile":
+                return {"data": {"id": self.user_id}}
+            if self.error:
+                raise self.error
+            return {"data": self.items, "complete": self.complete}
+
+    path = tmp_path / "events.db"
+    client = Client()
+    assert await poll_once(client, path, "assignments", {"course_id": "1"}) == []
+    client.items = []
+    client.complete = False
+    with pytest.raises(IncompletePoll):
+        await poll_once(client, path, "assignments", {"course_id": "1"})
+    client.complete = True
+    client.error = RuntimeError("simulated transient network failure")
+    with pytest.raises(RuntimeError):
+        await poll_once(client, path, "assignments", {"course_id": "1"})
+    assert read_events(path) == []
+    restarted = Client()
+    restarted.items = [{"id": 1, "name": "changed"}]
+    events = await poll_once(restarted, path, "assignments", {"course_id": "1"})
+    assert [event["kind"] for event in events] == ["changed"]
+    for account, course, query in [
+        (99, "1", None),
+        (42, "2", None),
+        (42, "1", {"search_term": "new query"}),
+    ]:
+        restarted.user_id = account
+        assert await poll_once(restarted, path, "assignments", {"course_id": course}, query) == []
+    assert read_events(path) == events
+
+
+def test_signed_file_expiry_changes_ignore_only_volatile_arguments(tmp_path):
+    path = tmp_path / "events.db"
+    for signature in ("first", "second"):
+        assert (
+            record_snapshot(
+                path,
+                scope="s",
+                operation="files",
+                complete=True,
+                items=[
+                    {
+                        "id": 1,
+                        "url": "https://cdn.example/file?lesson=1&"
+                        f"X-Amz-Signature={signature}&X-Amz-Expires=100&verifier={signature}",
+                    }
+                ],
+            )
+            == []
+        )
+    changed = record_snapshot(
+        path,
+        scope="s",
+        operation="files",
+        complete=True,
+        items=[{"id": 1, "url": "https://cdn.example/file?lesson=2&X-Amz-Signature=third"}],
+    )
+    assert [event["kind"] for event in changed] == ["changed"]

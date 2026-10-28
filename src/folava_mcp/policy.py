@@ -15,6 +15,8 @@ class PolicyError(ValueError):
 
 def validate_origin(value: str) -> str:
     try:
+        if not isinstance(value, str):
+            raise PolicyError("Canvas origin must be an HTTPS origin.")
         url = urlsplit(value)
         if (
             url.scheme != "https"
@@ -29,15 +31,19 @@ def validate_origin(value: str) -> str:
             or any(ord(char) < 33 for char in value)
         ):
             raise PolicyError("Canvas origin must be an HTTPS origin with no path or credentials.")
-        return "https://" + url.netloc.lower().removesuffix(":443")
+        # TLS SNI and Host headers require ASCII; normalize IDN origins once.
+        hostname = url.hostname.encode("idna").decode("ascii").lower()
+        return "https://" + ("[" + hostname + "]" if ":" in hostname else hostname)
     except (ValueError, UnicodeError) as error:
         raise PolicyError("Canvas origin must be a valid HTTPS origin.") from error
 
 
 def operation_path(operation: str, path: dict[str, str] | None) -> tuple[Operation, str]:
-    if operation not in OPERATIONS:
+    if not isinstance(operation, str) or operation not in OPERATIONS:
         raise PolicyError("Unknown operation; use discover to find reviewed reads.")
     op = OPERATIONS[operation]
+    if path is not None and not isinstance(path, dict):
+        raise PolicyError("Path arguments must be an object.")
     values = path or {}
     if set(values) != set(op.required_path):
         raise PolicyError("Path arguments must exactly match the operation's required_path.")
@@ -55,7 +61,7 @@ def operation_path(operation: str, path: dict[str, str] | None) -> tuple[Operati
 def validate_query(op: Operation, query: dict[str, Any] | None) -> dict[str, Any]:
     result: dict[str, Any] = {}
     allowed = set(op.query_keys) | {"page", "per_page", "bookmark", "cursor"}
-    if not isinstance(query or {}, dict):
+    if query is not None and not isinstance(query, dict):
         raise PolicyError("Query must be an object.")
     for key, value in (query or {}).items():
         if not isinstance(key, str) or key not in allowed:

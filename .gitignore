@@ -13,3 +13,5 @@ dist/
 *.sqlite*
 credentials*
 .DS_Store
+
+_site/

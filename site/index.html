@@ -1,0 +1,45 @@
+<section class="hero wrap">
+  <div class="hero-copy">
+    <p class="release-note">A personal Canvas connection for your agents</p>
+    <h1>Your courses.<br>Within reach.</h1>
+    <p class="lead">Bring assignments, course material and feedback into the conversation you’re already having.</p>
+    <p>Folava connects your agent to Canvas, with a deliberately read-only boundary. You stay in control of submissions, messages and changes.</p>
+    <div class="actions"><a class="button primary" href="#install">Get started</a><a class="text-link" href="{{BASE}}docs/getting-started/">Read the guide</a></div>
+    <p class="small muted">Open source. Runs on your computer. No Folava account.</p>
+  </div>
+  <div class="sample" aria-labelledby="sample-title">
+    <div class="sample-heading"><span class="sample-symbol" aria-hidden="true">f</span><div><p id="sample-title">A little context goes a long way.</p><p class="small muted">Synthetic example workspace</p></div></div>
+    <div class="example-tabs" role="tablist" aria-label="Example workflows">
+      <button role="tab" id="tab-week" aria-controls="example-week" aria-selected="true" tabindex="0" data-example="week">This week</button>
+      <button role="tab" id="tab-feedback" aria-controls="example-feedback" aria-selected="false" tabindex="-1" data-example="feedback">Feedback</button>
+      <button role="tab" id="tab-files" aria-controls="example-files" aria-selected="false" tabindex="-1" data-example="files">Course files</button>
+    </div>
+    <div id="example-week" role="tabpanel" aria-labelledby="tab-week" class="example-panel">
+      <p class="sample-question">“What should I prepare for the fieldwork seminar?”</p>
+      <div class="source-row"><div class="source-type">Assignment</div><h3>Field observation report</h3><p>Record three observations and discuss the conditions. Bring your notes to the seminar.</p><span class="source-meta">ENV101 · due 5 November, 16:00 UTC</span></div>
+      <div class="source-row compact"><div><span class="source-type">Course file</span><h3>Field guide</h3></div><span class="file-extension">TXT</span></div>
+      <p class="sample-footnote">Original Canvas IDs and source links stay with the result.</p>
+    </div>
+    <div id="example-feedback" role="tabpanel" aria-labelledby="tab-feedback" class="example-panel" hidden>
+      <p class="sample-question">“Help me understand the feedback on my report.”</p>
+      <div class="source-row"><div class="source-type">Your submission</div><h3>Read the feedback. Keep the context.</h3><p>Your agent can read the submission history, available comments and rubric assessment together with the assignment instructions.</p><span class="source-meta">Only what your Canvas account can access</span></div>
+      <p class="sample-footnote">Reading feedback doesn’t submit, edit or mark work as complete.</p>
+    </div>
+    <div id="example-files" role="tabpanel" aria-labelledby="tab-files" class="example-panel" hidden>
+      <p class="sample-question">“Find the field guide attached to this assignment.”</p>
+      <div class="source-row"><div class="source-type">Attachment</div><h3>field-guide.txt</h3><p class="reading-excerpt">Observe carefully. Record time, place and conditions.</p><span class="source-meta">Bounded download · MIME type · SHA-256</span></div>
+      <p class="sample-footnote">Read small files through MCP or explicitly export a larger attachment with the CLI.</p>
+    </div>
+  </div>
+</section>
+<section id="install" class="install-band">
+  <div class="wrap install-grid"><div><h2>A few commands.<br>Your own environment.</h2><p>Install with <a href="https://docs.astral.sh/uv/getting-started/installation/">uv</a>, then connect a synthetic workspace to Codex. No Canvas credentials needed for the demo.</p><a class="light-link" href="{{BASE}}docs/authentication/">Connect your real account</a></div>
+  <div class="install-commands"><p class="step-label">Install the preview</p><div class="code-block"><pre><code>{{INSTALL_COMMAND}}</code></pre><button class="copy-button" data-copy hidden aria-label="Copy installation command">Copy</button></div><p class="step-label">Try it with Codex</p><div class="code-block"><pre><code>codex mcp add canvas-demo -- folava-mcp serve --demo</code></pre><button class="copy-button" data-copy hidden aria-label="Copy demo connection command">Copy</button></div><p class="small">Python 3.11+ · Linux, macOS and Windows · v{{VERSION}}</p></div></div>
+</section>
+<section class="wrap workflows" aria-labelledby="workflows-title"><div class="section-intro"><h2 id="workflows-title">Make sense of<br>the week ahead.</h2><p>Use a small set of tools for common questions. Reach deeper through a searchable catalog of reviewed reads.</p><a class="text-link" href="{{BASE}}catalog/">Explore the API catalog</a></div><div class="workflow-list">
+  <article><h3>Plan the week</h3><p>Bring planner items, course calendar events and assignment deadlines into view. Completeness and permission errors stay explicit.</p></article>
+  <article><h3>Read with the source nearby</h3><p>Follow modules to pages, instructions, files and your own submissions. Keep the Canvas IDs and links when explaining the material.</p></article>
+  <article><h3>Notice what changed</h3><p>Poll a collection and replay its change events after a cursor. Your scheduler can start an agent; Folava doesn’t run commands from course content.</p><a href="{{BASE}}docs/events/">Work with the change feed</a></article>
+</div></section>
+<section class="wrap boundary"><div><h2>Useful access.<br>A clear boundary.</h2><p>The resource client only sends reviewed GET requests. It rejects uploads, submissions, arbitrary destinations and options that mark content as read.</p></div><div><p>Credentials are configured outside the conversation and kept in your OS keyring or a protected secret source. Folava has no telemetry or model SDK.</p><p>Your MCP host may share selected course material with its model provider. Choose a host appropriate for your institution and your data.</p><a href="{{BASE}}docs/privacy/">Read about data handling</a></div></section>
+<section class="wrap preview-note"><h2>Know what you’re installing</h2><p>This is an independent development preview. Access depends on your account permissions, OAuth scopes and institution. Instructure’s current policy explicitly addresses MCP approval; that approval has not been obtained for this project. <a href="{{BASE}}docs/release-readiness/">Read the deployment limits.</a></p><p>Canvas remains the source of truth. External timetables, locked content and third-party LTI tools may not be accessible.</p></section>

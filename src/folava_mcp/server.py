@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
+import re
 from contextlib import asynccontextmanager
 from typing import Annotated, Any
 
@@ -27,6 +29,7 @@ INSTRUCTIONS = (
     "The server cannot submit assignments or mark work complete. "
     "Calendar covers only events published in Canvas; external timetables and LTI data may differ."
 )
+AGENDA_TIMEOUT = 45.0
 READ_ONLY = ToolAnnotations(
     readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
 )
@@ -38,10 +41,10 @@ def _bounded(result: dict, limit: int = 70_000) -> dict[str, Any]:
     clipped = False
     nodes = 0
 
-    def clip(value):
+    def clip(value, depth=0):
         nonlocal remaining, clipped, nodes
         nodes += 1
-        if remaining < 100 or nodes > 3000:
+        if remaining < 100 or nodes > 3000 or depth > 32:
             clipped = True
             return None
         remaining -= 4
@@ -57,10 +60,10 @@ def _bounded(result: dict, limit: int = 70_000) -> dict[str, Any]:
         if isinstance(value, list):
             output = []
             for item in value:
-                if remaining < 100 or nodes > 3000:
+                if remaining < 100 or nodes > 3000 or depth > 32:
                     clipped = True
                     break
-                output.append(clip(item))
+                output.append(clip(item, depth + 1))
             return output
         if isinstance(value, dict):
             output = {}
@@ -70,7 +73,7 @@ def _bounded(result: dict, limit: int = 70_000) -> dict[str, Any]:
                     clipped = True
                     break
                 remaining -= key_size + 2
-                output[key] = clip(item)
+                output[key] = clip(item, depth + 1)
             return output
         remaining -= len(json.dumps(value))
         return value
@@ -108,10 +111,14 @@ class Workspace:
         async with client:
             yield client
 
-    async def read(self, operation, path=None, query=None, max_pages=1):
+    async def read(self, operation, path=None, query=None, max_pages=1, *, client=None):
         try:
-            async with self.client() as client:
+            if client is not None:
                 return _bounded(await client.read(operation, path, query, max_pages=max_pages))
+            async with self.client() as active_client:
+                return _bounded(
+                    await active_client.read(operation, path, query, max_pages=max_pages)
+                )
         except CanvasError as error:
             return {
                 "error": {
@@ -219,10 +226,10 @@ def create_server(
                 datetime.fromisoformat(value.replace("Z", "+00:00"))
                 for value in (start_date, end_date)
             )
-            if end < start or (end - start).days > 366:
+            if end < start or (end - start).total_seconds() > 366 * 86400:
                 raise ValueError
             ids = list(dict.fromkeys(course_ids or []))
-            if len(ids) > 100 or any(not item.isdecimal() for item in ids):
+            if len(ids) > 100 or any(not re.fullmatch(r"[0-9]{1,20}", item) for item in ids):
                 raise ValueError
         except (ValueError, TypeError):
             return {
@@ -236,15 +243,38 @@ def create_server(
                 "complete": False,
             }
         query = {"start_date": start_date, "end_date": end_date}
-        sources = {"planner": await workspace.read("planner_items", query=query, max_pages=5)}
-        for index in range(0, len(ids), 10):
-            contexts = [f"course_{item}" for item in ids[index : index + 10]]
-            for kind in ("event", "assignment"):
-                sources[f"calendar_{index // 10}_{kind}"] = await workspace.read(
-                    "calendar_events",
-                    query={**query, "context_codes[]": contexts, "type": kind},
-                    max_pages=5,
+        sources = {}
+        try:
+            # One credential load/session per agenda, with an aggregate deadline.
+            async with asyncio.timeout(AGENDA_TIMEOUT), workspace.client() as active_client:
+                sources["planner"] = await workspace.read(
+                    "planner_items", query=query, max_pages=5, client=active_client
                 )
+                for index in range(0, len(ids), 10):
+                    contexts = [f"course_{item}" for item in ids[index : index + 10]]
+                    for kind in ("event", "assignment"):
+                        sources[f"calendar_{index // 10}_{kind}"] = await workspace.read(
+                            "calendar_events",
+                            query={**query, "context_codes[]": contexts, "type": kind},
+                            max_pages=5,
+                            client=active_client,
+                        )
+        except TimeoutError:
+            sources["remaining"] = {
+                "complete": False,
+                "error": {
+                    "code": "timeout",
+                    "message": "Agenda deadline reached; use fewer courses or retry.",
+                },
+            }
+        except (CanvasError, ValueError, RuntimeError):
+            sources["connection"] = {
+                "complete": False,
+                "error": {
+                    "code": "configuration",
+                    "message": "Run folava-mcp doctor and check authentication.",
+                },
+            }
         return _bounded(
             {
                 "sources": sources,

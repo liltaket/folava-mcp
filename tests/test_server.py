@@ -15,7 +15,7 @@ async def test_demo_workflows():
     assert courses["demo"] and courses["complete"]
     assert courses["data"][0]["id"] == 101
     failure = await workspace.read("unsupported")
-    assert not failure["complete"] and failure["error"]["code"] == "demo_unavailable"
+    assert not failure["complete"] and failure["error"]["code"] == "policy"
 
 
 def test_output_clipping_never_claims_complete():
@@ -87,3 +87,80 @@ def test_aggregate_output_cap_for_wide_and_nested_objects():
         output = _bounded(result)
         assert len(json.dumps(output, ensure_ascii=False).encode()) < 70_000
         assert output["content_truncated"] and not output["complete"]
+
+
+async def test_agenda_uses_one_client_and_preserves_partial_failures():
+    from folava_mcp.client import CanvasError
+    from folava_mcp.server import create_server
+
+    instances, calls = [], []
+
+    class Client:
+        async def __aenter__(self):
+            instances.append(self)
+            return self
+
+        async def __aexit__(self, *args):
+            pass
+
+        async def read(self, operation, path=None, query=None, **kwargs):
+            calls.append((operation, query))
+            if operation == "calendar_events" and query["type"] == "event":
+                raise CanvasError("forbidden", "Calendar access is not allowed.")
+            return {"data": [], "complete": True}
+
+    server = create_server(client_factory=Client)
+    result = await server.call_tool(
+        "canvas_agenda",
+        {"start_date": "2026-11-01", "end_date": "2026-11-07", "course_ids": ["101"]},
+    )
+    output = result.structured_content
+    assert len(instances) == 1 and len(calls) == 3
+    assert not output["complete"]
+    assert output["sources"]["calendar_0_event"]["error"]["code"] == "forbidden"
+    assert output["sources"]["calendar_0_assignment"]["complete"]
+
+
+async def test_agenda_deadline_cancels_and_reports_partial_sources(monkeypatch):
+    import asyncio
+
+    from folava_mcp import server as module
+
+    closed = []
+
+    class Client:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            closed.append(True)
+
+        async def read(self, operation, *args, **kwargs):
+            if operation != "planner_items":
+                await asyncio.sleep(10)
+            return {"data": [], "complete": True}
+
+    monkeypatch.setattr(module, "AGENDA_TIMEOUT", 0.02)
+    result = await module.create_server(client_factory=Client).call_tool(
+        "canvas_agenda",
+        {"start_date": "2026-11-01", "end_date": "2026-11-07", "course_ids": ["101"]},
+    )
+    output = result.structured_content
+    assert not output["complete"] and output["sources"]["planner"]["complete"]
+    assert output["sources"]["remaining"]["error"]["code"] == "timeout"
+    assert closed == [True]
+
+
+async def test_agenda_rejects_non_ascii_ids_and_overlong_ranges_before_connecting():
+    from folava_mcp.server import create_server
+
+    def forbidden_factory():
+        raise AssertionError("Invalid agenda must not connect")
+
+    server = create_server(client_factory=forbidden_factory)
+    for arguments in (
+        {"start_date": "2026-01-01T00:00:00Z", "end_date": "2027-01-02T01:00:00Z"},
+        {"start_date": "2026-11-01", "end_date": "2026-11-07", "course_ids": ["١٠١"]},
+    ):
+        result = await server.call_tool("canvas_agenda", arguments)
+        assert result.structured_content["error"]["code"] == "input"

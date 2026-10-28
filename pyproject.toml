@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "folava-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "A read-only Canvas LMS connection for your agents."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -27,12 +27,13 @@ dependencies = ["mcp==2.3.0", "httpx==0.28.1", "keyring>=25.7,<26", "typer>=0.27
 folava-mcp = "folava_mcp.cli:app"
 
 [project.urls]
-Homepage = "https://github.com/liltaket/folava-mcp"
-Documentation = "https://github.com/liltaket/folava-mcp/tree/main/docs"
+Homepage = "https://liltaket.github.io/folava-mcp/"
+Documentation = "https://liltaket.github.io/folava-mcp/docs/getting-started/"
 Issues = "https://github.com/liltaket/folava-mcp/issues"
 
 [dependency-groups]
-dev = ["pytest>=9.2,<10", "pytest-asyncio>=1.4,<2", "ruff>=0.17,<0.18", "build>=1.6,<2", "hatchling>=1.27,<2"]
+dev = ["pytest>=9.2,<10", "pytest-asyncio>=1.4,<2", "ruff>=0.17,<0.18", "build>=1.6,<2", "hatchling>=1.27,<2", "markdown-it-py>=4.2,<5"]
+web = ["playwright==1.64.1"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/folava_mcp"]

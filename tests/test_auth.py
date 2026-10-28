@@ -307,3 +307,246 @@ def test_auth_response_compression_rejected_without_decoding(monkeypatch):
     )
     with pytest.raises(auth.AuthError, match="uncompressed"):
         auth.verify_identity("https://school.example", "secret")
+
+
+def test_callback_unicode_state_is_rejected_without_type_error():
+    with pytest.raises(auth.AuthError, match="state"):
+        auth.parse_callback("code=private-code&state=%C3%A5", "ascii-state")
+
+
+def test_scope_cannot_smuggle_a_write_scope_in_one_value():
+    with pytest.raises(auth.AuthError, match="GET scopes"):
+        auth.authorization_url(
+            "https://school.example",
+            "client",
+            "http://127.0.0.1:8765/callback",
+            "state",
+            ["url:GET|/api/v1/courses url:POST|/api/v1/courses"],
+        )
+
+
+@pytest.fixture
+def callback_server():
+    """Real HTTP sockets; skip only when the execution sandbox forbids sockets."""
+    import socket
+    import threading
+    from contextlib import contextmanager
+
+    @contextmanager
+    def start(timeout=2):
+        try:
+            with socket.socket() as probe:
+                probe.bind(("127.0.0.1", 0))
+                port = probe.getsockname()[1]
+        except PermissionError:
+            pytest.skip("Execution sandbox forbids loopback sockets")
+        ready = threading.Event()
+        finished = threading.Event()
+        result = {}
+        uri = f"http://127.0.0.1:{port}/callback"
+
+        def worker():
+            try:
+                result["code"] = auth.receive_authorization_code(
+                    "https://school.example/login/oauth2/auth",
+                    uri,
+                    "expected-state",
+                    timeout=timeout,
+                    open_browser=False,
+                    on_url=lambda _: ready.set(),
+                )
+            except Exception as error:
+                result["error"] = error
+            finally:
+                finished.set()
+
+        thread = threading.Thread(target=worker, daemon=True)
+        thread.start()
+        assert ready.wait(2), result
+        try:
+            yield port, result, finished
+        finally:
+            thread.join(timeout + 2)
+            assert not thread.is_alive(), "Callback listener failed to respect its deadline"
+
+    return start
+
+
+def _callback_http(port, target, *, hosts=None, method="GET"):
+    import http.client
+
+    connection = http.client.HTTPConnection("127.0.0.1", port, timeout=2)
+    try:
+        connection.putrequest(method, target, skip_host=True)
+        for host in hosts if hosts is not None else [f"127.0.0.1:{port}"]:
+            connection.putheader("Host", host)
+        connection.endheaders()
+        response = connection.getresponse()
+        body = response.read()
+        return response.status, body
+    finally:
+        connection.close()
+
+
+def test_real_callback_rejects_forgery_and_malformed_requests_then_succeeds(
+    callback_server, capsys
+):
+    with callback_server() as (port, result, finished):
+        for target, hosts, status in [
+            ("/wrong?code=private-code&state=expected-state", None, 404),
+            ("/callback?code=private-code&state=wrong", None, 400),
+            ("/callback?code=private-code&state=%C3%A5", None, 400),
+            ("/callback?code=%ZZ&state=expected-state", None, 400),
+            ("/callback?code=x&state=expected-state&state=expected-state", None, 400),
+            ("/callback?code=x&state=expected-state", ["evil.example"], 404),
+            ("/callback?code=x&state=expected-state", [f"127.0.0.1:{port}", "evil.example"], 404),
+            ("http://evil.example/callback?code=x&state=expected-state", None, 404),
+            ("http://[", None, 400),
+        ]:
+            actual, body = _callback_http(port, target, hosts=hosts)
+            assert actual == status
+            assert b"private-code" not in body
+            assert not finished.is_set()
+        status, body = _callback_http(port, "/callback?code=accepted-code&state=expected-state")
+        assert status == 200
+        assert b"accepted-code" not in body
+        assert finished.wait(1)
+        assert result == {"code": "accepted-code"}
+    assert "Traceback" not in capsys.readouterr().err
+
+
+def test_real_callback_denial_finishes_without_waiting_for_timeout(callback_server):
+    with callback_server() as (port, result, finished):
+        assert _callback_http(port, "/callback?error=access_denied&state=expected-state")[0] == 400
+        assert finished.wait(1)
+        assert isinstance(result["error"], auth.AuthError)
+        assert "declined" in str(result["error"])
+
+
+def test_real_callback_timeout_bounds_idle_and_partial_connections(callback_server):
+    import socket
+
+    for partial_connection in (False, True):
+        started = time.monotonic()
+        with callback_server(timeout=0.1) as (port, result, finished):
+            connection = None
+            try:
+                if partial_connection:
+                    connection = socket.create_connection(("127.0.0.1", port), timeout=1)
+                    connection.sendall(b"GET /callback?code=private-code HTTP/1.1\r\n")
+                assert finished.wait(0.8)
+                assert isinstance(result["error"], auth.AuthError)
+                assert "timed out" in str(result["error"])
+                assert time.monotonic() - started < 1
+            finally:
+                if connection:
+                    connection.close()
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "code=x&state=expected&bad",
+        "code=x&state=%FF",
+        "code=%ZZ&state=expected",
+        "code=x%0A&state=expected",
+        "code=" + "x" * 4097 + "&state=expected",
+        "code=x&state=expected&" + "a=b&" * 9,
+    ],
+)
+def test_callback_malformed_query_is_a_safe_auth_error(query):
+    with pytest.raises(auth.AuthError):
+        auth.parse_callback(query, "expected")
+
+
+def _expired_oauth_profile():
+    profile = Profile(
+        "https://school.example",
+        "oauth",
+        "a" * 32,
+        "42",
+        "client",
+        "http://127.0.0.1:8765/callback",
+    )
+    save_profile("default", profile)
+    auth._put_secret(
+        profile,
+        {
+            "origin": profile.origin,
+            "user_id": "42",
+            "access_token": "expired",
+            "expires_at": 1,
+            "refresh_token": "refresh-secret",
+            "client_secret": "client-secret",
+        },
+    )
+    return profile
+
+
+def test_concurrent_refreshes_exchange_once_and_share_new_token(memory, monkeypatch):
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+
+    _expired_oauth_profile()
+    requests = []
+    barrier = threading.Barrier(4)
+
+    def handler(request):
+        requests.append(request)
+        time.sleep(0.03)  # Hold the refresh while competing processes reach the file lock.
+        return httpx.Response(
+            200,
+            json={
+                "access_token": "fresh-secret",
+                "token_type": "Bearer",
+                "expires_in": 3600,
+            },
+        )
+
+    def load():
+        barrier.wait(timeout=2)
+        return auth.load_credentials().token
+
+    mock_http(monkeypatch, handler)
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        assert list(executor.map(lambda _: load(), range(4))) == ["fresh-secret"] * 4
+    assert len(requests) == 1
+
+
+def test_refresh_failure_keeps_previous_secret_and_can_retry(memory, monkeypatch):
+    profile = _expired_oauth_profile()
+    before = auth._get_secret(profile)
+    mock_http(monkeypatch, lambda _: httpx.Response(400, json={"error": "private-secret"}))
+    with pytest.raises(auth.AuthError) as error:
+        auth.load_credentials()
+    assert "private-secret" not in str(error.value)
+    assert auth._get_secret(profile) == before
+    mock_http(
+        monkeypatch,
+        lambda _: httpx.Response(
+            200,
+            json={
+                "access_token": "retried-token",
+                "token_type": "Bearer",
+                "expires_in": 3600,
+            },
+        ),
+    )
+    assert auth.load_credentials().token == "retried-token"
+
+
+def test_failed_profile_commit_removes_new_secret_and_preserves_previous(memory, monkeypatch):
+    mock_http(monkeypatch, lambda _: httpx.Response(200, json={"id": 42}))
+    auth.login_token("https://school.example", "existing-token")
+    metadata = load_profile()
+    before = memory.items.copy()
+
+    def fail(*args):
+        raise OSError("simulated disk failure")
+
+    monkeypatch.setattr(auth, "save_profile", fail)
+    with pytest.raises(OSError):
+        auth.login_token("https://school.example", "replacement-token")
+    assert load_profile() == metadata
+    assert memory.items == before
+    assert auth.load_credentials().token == "existing-token"

@@ -8,7 +8,7 @@ A read-only connection between Canvas LMS and the agents you already use.
 Ask about next week's deadlines, read assignment instructions, inspect feedback,
 or find a course attachment—without giving an agent the ability to submit work.
 
-[Getting started](docs/getting-started.md) · [Tools](docs/tools.md) ·
+[Project site](https://liltaket.github.io/folava-mcp/) · [Getting started](docs/getting-started.md) · [Tools](docs/tools.md) ·
 [Authentication](docs/authentication.md) · [Architecture](docs/architecture.md)
 
 ```text
@@ -112,6 +112,9 @@ uv run ruff format --check .
 uv run pytest
 uv build
 ```
+
+Build the documentation site with `uv run python scripts/build_site.py`.
+See [site development](docs/site.md) for browser checks and deployment.
 
 The suite includes real MCP stdio handshakes against synthetic data, hostile URL
 and query cases, pagination, authentication, attachment boundaries and durable

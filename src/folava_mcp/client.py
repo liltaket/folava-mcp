@@ -12,8 +12,10 @@ import base64
 import hashlib
 import ipaddress
 import json
+import math
 import re
 import socket
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urljoin, urlsplit
@@ -32,15 +34,105 @@ class CanvasError(Exception):
         super().__init__(message)
 
 
+def _split_link(value: str, delimiter: str) -> list[str]:
+    """Split RFC 8288 separators, respecting quoted strings and URI brackets."""
+    parts: list[str] = []
+    quoted = escaped = angle = False
+    start = 0
+    for index, char in enumerate(value):
+        if escaped:
+            escaped = False
+        elif quoted and char == "\\":
+            escaped = True
+        elif char == '"' and not angle:
+            quoted = not quoted
+        elif not quoted:
+            if char == "<":
+                if angle:
+                    raise CanvasError("pagination", "Malformed pagination URI brackets.")
+                angle = True
+            elif char == ">":
+                if not angle:
+                    raise CanvasError("pagination", "Malformed pagination URI brackets.")
+                angle = False
+            elif char == delimiter and not angle:
+                parts.append(value[start:index].strip())
+                start = index + 1
+    if quoted or escaped or angle:
+        raise CanvasError("pagination", "Canvas returned an incomplete pagination header.")
+    parts.append(value[start:].strip())
+    return parts
+
+
 def _next_link(header: str) -> str | None:
-    # A comma in an angle-bracketed URL must not split a link.
-    for match in re.finditer(r"<([^<>]+)>\s*((?:;\s*[^,]*)*)", header):
-        rel = re.search(r'(?:^|;)\s*rel\s*=\s*(?:"([^"]*)"|([^;\s]+))', match[2], re.I)
-        if rel and "next" in (rel[1] or rel[2]).lower().split():
-            return match[1]
-    if header and not re.search(r"<[^<>]+>", header):
-        raise CanvasError("pagination", "Canvas returned a malformed pagination header.")
-    return None
+    if not header:
+        return None
+    next_url = None
+    for link in _split_link(header, ","):
+        fields = _split_link(link, ";")
+        if not re.fullmatch(r"<[^<>]+>", fields[0]):
+            raise CanvasError("pagination", "Canvas returned a malformed pagination header.")
+        relations = None
+        for field in fields[1:]:
+            match = re.fullmatch(
+                r'([!#$%&\'*+.^_`|~0-9A-Za-z-]+)\s*=\s*("(?:[^"\\]|\\.)*"|[^\s";]+)', field
+            )
+            if not match:
+                raise CanvasError("pagination", "Canvas returned a malformed pagination parameter.")
+            if match[1].lower() == "rel":
+                if relations is not None:
+                    raise CanvasError(
+                        "pagination", "Canvas returned duplicate pagination relations."
+                    )
+                relations = match[2].strip('"').lower().split()
+        if relations and "next" in relations:
+            if next_url is not None:
+                raise CanvasError("pagination", "Canvas returned ambiguous pagination links.")
+            next_url = fields[0][1:-1]
+    return next_url
+
+
+def _decode_json(raw: bytes) -> Any:
+    # The byte cap alone permits millions of tiny objects or arbitrarily deep
+    # trees. Inspect structure outside strings before allocating the parsed tree.
+    depth = separators = 0
+    in_string = escaped = False
+    for char in raw:
+        if escaped:
+            escaped = False
+        elif in_string and char == 92:
+            escaped = True
+        elif char == 34:
+            in_string = not in_string
+        elif not in_string:
+            if char in (91, 123):
+                depth += 1
+                if depth > 100:
+                    raise CanvasError("upstream", "Canvas JSON exceeds the nesting limit.")
+            elif char in (93, 125):
+                depth -= 1
+            elif char == 44:
+                separators += 1
+                if separators > 200_000:
+                    raise CanvasError(
+                        "too_large", "Canvas JSON is too complex; request smaller pages."
+                    )
+
+    def finite_float(value: str) -> float:
+        number = float(value)
+        if not math.isfinite(number):
+            raise ValueError("Non-finite JSON number")
+        return number
+
+    def invalid_constant(_: str) -> None:
+        raise ValueError("Nonstandard JSON constant")
+
+    try:
+        return json.loads(
+            raw.decode("utf-8-sig"), parse_constant=invalid_constant, parse_float=finite_float
+        )
+    except (ValueError, UnicodeError, RecursionError):
+        raise CanvasError("upstream", "Canvas did not return valid JSON.") from None
 
 
 async def _raw_chunks(response):
@@ -58,7 +150,20 @@ async def _public_address(host: str) -> str:
             host, 443, type=socket.SOCK_STREAM, proto=socket.IPPROTO_TCP
         )
         ips = list(dict.fromkeys(info[4][0] for info in addresses))
-        if not ips or any(not ipaddress.ip_address(ip).is_global for ip in ips):
+
+        def unsafe(ip: str) -> bool:
+            address = ipaddress.ip_address(ip)
+            return (
+                not address.is_global
+                or address.is_multicast
+                or address.is_reserved
+                or (
+                    isinstance(address, ipaddress.IPv6Address)
+                    and (address.sixtofour is not None or address.teredo is not None)
+                )
+            )
+
+        if not ips or any(unsafe(ip) for ip in ips):
             raise CanvasError(
                 "unsafe_destination",
                 "Network destination must resolve only to public IP addresses.",
@@ -80,12 +185,15 @@ class CanvasClient:
             raise CanvasError("auth", "A valid Canvas access token is required.")
         self._token = token
         self._test_transport = transport is not None
-        self._http = httpx.AsyncClient(
-            transport=transport,
-            timeout=httpx.Timeout(20),
-            follow_redirects=False,
-            trust_env=False,
-            limits=httpx.Limits(max_keepalive_connections=0, max_connections=4),
+        # The public transport interface avoids AsyncClient's INFO-level URL
+        # logging (signed file URLs are credentials) and cookie persistence.
+        self._transport = (
+            transport
+            if transport is not None
+            else httpx.AsyncHTTPTransport(
+                trust_env=False,
+                limits=httpx.Limits(max_keepalive_connections=0, max_connections=4),
+            )
         )
         self._request_lock = asyncio.Lock()
 
@@ -96,7 +204,22 @@ class CanvasClient:
         await self.close()
 
     async def close(self) -> None:
-        await self._http.aclose()
+        await self._transport.aclose()
+
+    @asynccontextmanager
+    async def _stream(self, url, headers, extensions):
+        request = httpx.Request(
+            "GET",
+            url,
+            headers=headers,
+            extensions={**extensions, "timeout": httpx.Timeout(20).as_dict()},
+        )
+        response = await self._transport.handle_async_request(request)
+        response.request = request
+        try:
+            yield response
+        finally:
+            await response.aclose()
 
     async def _request(
         self, url: str, *, authorize: bool, max_bytes: int, redirects: bool = False
@@ -133,9 +256,7 @@ class CanvasClient:
                 if authorize:
                     headers["Authorization"] = "Bearer " + self._token
                 try:
-                    async with self._http.stream(
-                        "GET", destination, headers=headers, extensions=extensions
-                    ) as response:
+                    async with self._stream(destination, headers, extensions) as response:
                         status = response.status_code
                         if status == 429 or status in (500, 502, 503, 504):
                             if attempt == 2:
@@ -242,10 +363,13 @@ class CanvasClient:
                 next_url, authorize=True, max_bytes=min(10_000_000, remaining)
             )
             remaining -= len(raw)
-            try:
-                page = json.loads(raw)
-            except (ValueError, UnicodeError):
-                raise CanvasError("upstream", "Canvas did not return valid JSON.") from None
+            page = _decode_json(raw)
+            if op.id == "quiz_submissions" and (
+                not isinstance(page, dict)
+                or not isinstance(page.get("quiz_submissions"), list)
+                or any(not isinstance(values, list) for values in page.values())
+            ):
+                raise CanvasError("upstream", "Invalid quiz submissions envelope.")
             if pages == 0:
                 data = page
             elif op.id == "quiz_submissions" and isinstance(data, dict) and isinstance(page, dict):
@@ -327,6 +451,10 @@ class CanvasClient:
                             raise CanvasError("redirect", "File download redirect has no location.")
                         url = urljoin(url, location)
                         continue
+                    if status != 200 or "content-range" in headers:
+                        raise CanvasError(
+                            "upstream", "File download did not return a complete response."
+                        )
                     mime = (
                         headers.get(
                             "content-type",

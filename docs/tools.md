@@ -54,7 +54,9 @@ Pass explicit course IDs to `canvas_agenda` to include their calendars. The API
 otherwise defaults to the personal calendar. The tool batches ten contexts and
 reads both `type=event` and `type=assignment`. Planner and calendar can overlap;
 deduplicate by resource type and ID. Preserve timezone offsets and all-day dates.
-Use a range of at most 366 days. No tool promises external institutional schedules.
+Use a range of at most 366 days. One agenda reuses its client across all sources
+and has a 45-second total deadline; completed sources remain available if time
+runs out. No tool promises external institutional schedules.
 
 ## Attachments
 

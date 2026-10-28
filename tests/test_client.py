@@ -291,3 +291,306 @@ def test_quiz_envelope_pagination_preserves_associated_arrays():
             assert len(result["data"]["users"]) == 2
 
     run(scenario())
+
+
+@pytest.mark.parametrize(
+    "body", [b"[" * 2000 + b"0" + b"]" * 2000, b"[NaN]", b"[Infinity]", b"[-Infinity]", b"[1e9999]"]
+)
+def test_malformed_or_excessively_nested_json_is_safe(body):
+    async def scenario():
+        async with CanvasClient(
+            "https://canvas.example",
+            "secret",
+            transport=httpx.MockTransport(lambda _: httpx.Response(200, content=body)),
+        ) as client:
+            with pytest.raises(CanvasError) as error:
+                await client.read("courses")
+            assert error.value.code == "upstream"
+
+    run(scenario())
+
+
+def test_link_quoted_comma_and_semicolon_does_not_hide_next_page():
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        if request.url.params.get("page") == "2":
+            return httpx.Response(200, json=[{"id": 2}])
+        return httpx.Response(
+            200,
+            json=[{"id": 1}],
+            headers={
+                "link": (
+                    "<https://canvas.example/api/v1/courses?page=2>; "
+                    'title="Read, then; continue"; rel="next"'
+                )
+            },
+        )
+
+    async def scenario():
+        async with CanvasClient(
+            "https://canvas.example", "secret", transport=httpx.MockTransport(handler)
+        ) as client:
+            result = await client.read("courses", max_pages=2)
+            assert result["data"] == [{"id": 1}, {"id": 2}]
+            assert result["complete"]
+
+    run(scenario())
+    assert len(seen) == 2
+
+
+@pytest.mark.parametrize(
+    "header",
+    [
+        '<https://canvas.example/api/v1/courses?page=2>; rel="next',
+        '<https://canvas.example/api/v1/courses?page=2; rel="next"',
+        '<https://canvas.example/api/v1/courses?page=2>; rel="next", garbage',
+        '<https://canvas.example/api/v1/courses?page=2>; rel="next"; rel="previous"',
+    ],
+)
+def test_malformed_pagination_never_silently_claims_complete(header):
+    async def scenario():
+        async with CanvasClient(
+            "https://canvas.example",
+            "secret",
+            transport=httpx.MockTransport(
+                lambda _: httpx.Response(200, json=[], headers={"link": header})
+            ),
+        ) as client:
+            with pytest.raises(CanvasError) as error:
+                await client.read("courses")
+            assert error.value.code == "pagination"
+
+    run(scenario())
+
+
+@pytest.mark.parametrize("response", [{"quiz_submissions": [], "users": "invalid"}, {"users": []}])
+def test_quiz_envelope_validated_on_every_page(response):
+    async def scenario():
+        async with CanvasClient(
+            "https://canvas.example",
+            "secret",
+            transport=httpx.MockTransport(lambda _: httpx.Response(200, json=response)),
+        ) as client:
+            with pytest.raises(CanvasError):
+                await client.read("quiz_submissions", {"course_id": "1", "quiz_id": "2"})
+
+    run(scenario())
+
+
+@pytest.mark.parametrize(
+    "ip", ["224.0.0.1", "ff02::1", "2002:7f00:1::", "2001:0:4136:e378:8000:63bf:3fff:fdd2"]
+)
+def test_dns_rejects_multicast_and_ipv6_transition_destinations(monkeypatch, ip):
+    async def scenario():
+        async def fake(*args, **kwargs):
+            return [(socket.AF_INET6, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", (ip, 443))]
+
+        monkeypatch.setattr(asyncio.get_running_loop(), "getaddrinfo", fake)
+        with pytest.raises(CanvasError) as error:
+            await _public_address("storage.example")
+        assert error.value.code == "unsafe_destination"
+
+    run(scenario())
+
+
+def test_file_partial_content_is_not_reported_as_complete():
+    def handler(request):
+        if request.url.path.startswith("/api/"):
+            return httpx.Response(
+                200, json={"id": 1, "size": 10, "url": "https://storage.example/file"}
+            )
+        return httpx.Response(206, content=b"abc", headers={"content-range": "bytes 0-2/10"})
+
+    async def scenario():
+        async with CanvasClient(
+            "https://canvas.example", "secret", transport=httpx.MockTransport(handler)
+        ) as client:
+            with pytest.raises(CanvasError) as error:
+                await client.file("1")
+            assert error.value.code == "upstream"
+
+    run(scenario())
+
+
+def test_httpx_info_logs_never_expose_file_capability_urls(caplog):
+    import logging
+
+    def handler(request):
+        if request.url.path.startswith("/api/"):
+            return httpx.Response(
+                200,
+                json={"id": 1, "url": "https://storage.example/file?signature=secret-capability"},
+            )
+        return httpx.Response(200, content=b"file")
+
+    async def scenario():
+        async with CanvasClient(
+            "https://canvas.example", "secret", transport=httpx.MockTransport(handler)
+        ) as client:
+            await client.file("1")
+
+    with caplog.at_level(logging.INFO, logger="httpx"):
+        run(scenario())
+    assert "secret-capability" not in caplog.text
+
+
+async def test_cancellation_closes_stream_and_releases_request_lock():
+    started, cancelled = asyncio.Event(), asyncio.Event()
+
+    class SlowStream(httpx.AsyncByteStream):
+        async def __aiter__(self):
+            started.set()
+            await asyncio.Event().wait()
+            yield b"[]"
+
+        async def aclose(self):
+            cancelled.set()
+
+    calls = 0
+
+    def handler(request):
+        nonlocal calls
+        calls += 1
+        return (
+            httpx.Response(200, stream=SlowStream()) if calls == 1 else httpx.Response(200, json=[])
+        )
+
+    async with CanvasClient(
+        "https://canvas.example", "secret", transport=httpx.MockTransport(handler)
+    ) as client:
+        task = asyncio.create_task(client.read("courses"))
+        await started.wait()
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        assert cancelled.is_set()
+        result = await asyncio.wait_for(client.read("courses"), 1)
+        assert result["complete"]
+
+
+async def test_whole_request_deadline_interrupts_stalled_body(monkeypatch):
+    real_timeout = asyncio.timeout
+    monkeypatch.setattr("folava_mcp.client.asyncio.timeout", lambda _: real_timeout(0.01))
+    closed = False
+
+    class Stream(httpx.AsyncByteStream):
+        async def __aiter__(self):
+            await asyncio.Event().wait()
+            yield b"[]"
+
+        async def aclose(self):
+            nonlocal closed
+            closed = True
+
+    async with CanvasClient(
+        "https://canvas.example",
+        "secret",
+        transport=httpx.MockTransport(lambda _: httpx.Response(200, stream=Stream())),
+    ) as client:
+        with pytest.raises(CanvasError) as error:
+            await client.read("courses")
+        assert error.value.code == "timeout" and error.value.retryable
+        assert closed
+
+
+async def test_retry_after_and_transport_timeouts_are_bounded(monkeypatch):
+    delays = []
+
+    async def sleep(delay):
+        delays.append(delay)
+
+    monkeypatch.setattr("folava_mcp.client.asyncio.sleep", sleep)
+    calls = 0
+
+    def handler(request):
+        nonlocal calls
+        calls += 1
+        assert request.extensions["timeout"] == {"connect": 20, "read": 20, "write": 20, "pool": 20}
+        if calls == 1:
+            raise httpx.ReadError("private URL credential")
+        if calls == 2:
+            return httpx.Response(503, headers={"retry-after": "99999"})
+        return httpx.Response(200, json=[])
+
+    async with CanvasClient(
+        "https://canvas.example", "secret", transport=httpx.MockTransport(handler)
+    ) as client:
+        result = await client.read("courses")
+        assert result["complete"]
+    assert calls == 3 and delays == [0.25, 2.0]
+
+
+async def test_json_complexity_rejected_before_parse_allocation():
+    body = b"[" + b"0," * 300_000 + b"0]"
+    async with CanvasClient(
+        "https://canvas.example",
+        "secret",
+        transport=httpx.MockTransport(lambda _: httpx.Response(200, content=body)),
+    ) as client:
+        with pytest.raises(CanvasError) as error:
+            await client.read("courses")
+        assert error.value.code == "too_large"
+
+
+async def test_file_redirect_revalidation_and_credentials_stay_stripped_on_return():
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        if request.url.path.startswith("/api/"):
+            return httpx.Response(
+                200, json={"id": 1, "url": "https://canvas.example/files/1/download"}
+            )
+        if request.url.host == "storage.example":
+            assert "authorization" not in request.headers
+            return httpx.Response(
+                302, headers={"location": "https://canvas.example/files/1/download?returned=1"}
+            )
+        if "returned" in request.url.params:
+            assert "authorization" not in request.headers
+            assert "cookie" not in request.headers
+            return httpx.Response(200, content=b"ok")
+        assert request.headers["authorization"] == "Bearer secret"
+        return httpx.Response(
+            302,
+            headers={
+                "location": "https://storage.example/file",
+                "set-cookie": "session=should-not-persist; Secure",
+            },
+        )
+
+    async with CanvasClient(
+        "https://canvas.example", "secret", transport=httpx.MockTransport(handler)
+    ) as client:
+        result = await client.file("1")
+    assert result["size"] == 2 and len(seen) == 4
+
+
+@pytest.mark.parametrize(
+    "location",
+    [
+        "http://storage.example/file",
+        "https://u:p@storage.example/file",
+        "https://storage.example:8443/file",
+        "https://canvas.example/api/v1/conversations/1",
+    ],
+)
+async def test_file_redirect_boundary_checks_before_next_network_request(location):
+    requests = []
+
+    def handler(request):
+        requests.append(request)
+        if request.url.path.startswith("/api/"):
+            return httpx.Response(
+                200, json={"id": 1, "url": "https://canvas.example/files/1/download"}
+            )
+        return httpx.Response(302, headers={"location": location})
+
+    async with CanvasClient(
+        "https://canvas.example", "secret", transport=httpx.MockTransport(handler)
+    ) as client:
+        with pytest.raises(CanvasError):
+            await client.file("1")
+    assert len(requests) == 2

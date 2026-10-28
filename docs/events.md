@@ -20,8 +20,9 @@ Each event carries a durable cursor, event ID, query-scope hash, operation, Canv
 entity ID, observation time and kind (`created`, `changed`, `removed`). `removed`
 means no longer visible in this successful query, not proven deletion at Canvas.
 The scope is bound to origin, Canvas identity, operation, path, query and catalog
-version. Changing filters establishes a new baseline. Common volatile signed-URL
-query values are excluded from item hashes.
+version. Changing filters establishes a new baseline. Only recognized volatile signature/expiry
+query parameters are excluded from item hashes. Meaningful query parameters and
+fragments remain part of the comparison.
 
 Incomplete pagination, errors, missing IDs and duplicate IDs never replace the
 baseline. Overlapping polls of one state database are rejected before fetching so

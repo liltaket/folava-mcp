@@ -22,7 +22,7 @@ def _json(value: Any) -> str:
 
 def _stable(value: Any) -> Any:
     # Expiring file URLs should not turn an unchanged attachment into an event.
-    from urllib.parse import urlsplit, urlunsplit
+    from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
     if isinstance(value, dict):
         output = {}
@@ -34,8 +34,27 @@ def _stable(value: Any) -> Any:
                 "thumbnail_url",
                 "avatar_url",
             ) and isinstance(item, str):
-                parsed = urlsplit(item)
-                item = urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))
+                try:
+                    parsed = urlsplit(item)
+                    # Ignore only credential/expiry rotation, not meaningful URL targets.
+                    volatile = {"signature", "expires", "key-pair-id", "verifier"}
+                    query = [
+                        (name, value)
+                        for name, value in parse_qsl(parsed.query, keep_blank_values=True)
+                        if name.lower() not in volatile and not name.lower().startswith("x-amz-")
+                    ]
+                    item = urlunsplit(
+                        (
+                            parsed.scheme,
+                            parsed.netloc,
+                            parsed.path,
+                            urlencode(query),
+                            parsed.fragment,
+                        )
+                    )
+                except ValueError:
+                    # A malformed source link is still data whose changes matter.
+                    pass
             output[key] = _stable(item)
         return output
     if isinstance(value, list):

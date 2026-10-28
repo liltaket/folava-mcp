@@ -117,3 +117,19 @@ def test_swedish_page_slug_encoded_as_one_path_segment():
     assert path == "/api/v1/courses/1/pages/%C3%B6vningar-f%C3%B6r-studenter"
     url = "https://canvas.example" + path + "?page=2"
     assert validate_continuation(url, "https://canvas.example", OPERATIONS["page"], path) == url
+
+
+def test_international_domain_is_canonical_ascii_origin():
+    assert validate_origin("https://lärosäte.example/") == "https://xn--lroste-buad.example"
+
+
+@pytest.mark.parametrize("path", [[], ["course_id"], "course_id", 7])
+def test_non_object_path_is_rejected_consistently(path):
+    with pytest.raises(PolicyError):
+        operation_path("courses", path)
+
+
+@pytest.mark.parametrize("query", [[], "", 0, False])
+def test_falsey_non_object_query_is_rejected_consistently(query):
+    with pytest.raises(PolicyError):
+        validate_query(OPERATIONS["courses"], query)

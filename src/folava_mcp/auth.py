@@ -10,6 +10,7 @@ import hmac
 import json
 import math
 import os
+import re
 import secrets
 import time
 import uuid
@@ -282,7 +283,16 @@ def authorization_url(
     origin: str, client_id: str, redirect_uri: str, state: str, scopes: list[str]
 ) -> str:
     validate_redirect_uri(redirect_uri)
-    if not client_id or not scopes or any(not x.startswith("url:GET|/api/v1/") for x in scopes):
+    if (
+        not client_id
+        or not scopes
+        or any(
+            not isinstance(scope, str)
+            or not re.fullmatch(r"url:GET\|/api/v1/[A-Za-z0-9_:/.-]+", scope)
+            or ".." in scope.split("/")
+            for scope in scopes
+        )
+    ):
         raise AuthError("OAuth requires a client ID and explicit Canvas GET scopes.")
     return (
         normalize_origin(origin)
@@ -300,18 +310,47 @@ def authorization_url(
     )
 
 
-def parse_callback(query: str, expected_state: str) -> str:
-    values = parse_qs(query, keep_blank_values=True)
+def _callback_values(query: str) -> dict[str, list[str]]:
+    try:
+        if len(query) > 8192 or re.search(r"%(?![0-9A-Fa-f]{2})", query):
+            raise ValueError
+        return parse_qs(
+            query,
+            keep_blank_values=True,
+            strict_parsing=True,
+            errors="strict",
+            max_num_fields=8,
+        )
+    except (ValueError, UnicodeError):
+        raise AuthError("OAuth callback query was malformed. This callback was rejected.") from None
+
+
+def _state_matches(values: dict[str, list[str]], expected_state: str) -> bool:
     received = values.get("state", [])
-    if len(received) != 1 or not hmac.compare_digest(received[0], expected_state):
+    return (
+        len(received) == 1
+        and received[0].isascii()
+        and expected_state.isascii()
+        and hmac.compare_digest(received[0], expected_state)
+    )
+
+
+def parse_callback(query: str, expected_state: str) -> str:
+    values = _callback_values(query)
+    if not _state_matches(values, expected_state):
         raise AuthError("OAuth callback state did not match. This callback was rejected.")
     if "error" in values:
         raise AuthError(
             "Canvas authorization was declined or could not complete. Start sign-in again."
         )
     codes = values.get("code", [])
-    if len(codes) != 1 or not codes[0]:
-        raise AuthError("OAuth callback did not include one authorization code.")
+    if (
+        len(codes) != 1
+        or not codes[0]
+        or len(codes[0]) > 4096
+        or any(ord(char) < 33 or ord(char) > 126 for char in codes[0])
+    ):
+        raise AuthError("OAuth callback did not include one valid authorization code.")
     return codes[0]
 
 
@@ -326,6 +365,9 @@ def receive_authorization_code(
 ) -> str:
     """Bind loopback before opening the browser; never log callback query strings."""
     host, port, path = validate_redirect_uri(redirect_uri)
+    if not math.isfinite(timeout) or timeout <= 0:
+        raise AuthError("OAuth callback timeout must be a positive finite duration.")
+    deadline = time.monotonic() + timeout
     result: dict[str, str] = {}
 
     class Callback(BaseHTTPRequestHandler):
@@ -333,20 +375,28 @@ def receive_authorization_code(
             return
 
         def do_GET(self) -> None:
-            parsed = urlsplit(self.path)
-            if parsed.path != path or self.headers.get("Host") != f"{host}:{port}":
+            try:
+                parsed = urlsplit(self.path)
+            except ValueError:
+                self.send_error(400)
+                return
+            if (
+                parsed.path != path
+                or parsed.scheme
+                or parsed.netloc
+                or parsed.fragment
+                or self.headers.get_all("Host") != [f"{host}:{port}"]
+            ):
                 self.send_error(404)
                 return
             try:
                 code = parse_callback(parsed.query, state)
             except AuthError:
-                values = parse_qs(parsed.query)
-                received = values.get("state", [])
-                if (
-                    len(received) == 1
-                    and hmac.compare_digest(received[0], state)
-                    and "error" in values
-                ):
+                try:
+                    values = _callback_values(parsed.query)
+                except AuthError:
+                    values = {}
+                if _state_matches(values, state) and "error" in values:
                     result["error"] = "denied"
                 # A forged callback must not terminate a legitimate pending login.
                 self.send_response(400)
@@ -368,7 +418,7 @@ def receive_authorization_code(
     class LoopbackServer(HTTPServer):
         def get_request(self) -> tuple[Any, Any]:
             connection, address = super().get_request()
-            connection.settimeout(2)
+            connection.settimeout(max(0.001, min(2, deadline - time.monotonic())))
             return connection, address
 
     try:
@@ -378,8 +428,8 @@ def receive_authorization_code(
                 on_url(url)
             if open_browser:
                 webbrowser.open(url)
-            deadline = time.monotonic() + timeout
             while not result and time.monotonic() < deadline:
+                server.timeout = min(0.5, max(0.001, deadline - time.monotonic()))
                 server.handle_request()
     except OSError:
         raise AuthError(

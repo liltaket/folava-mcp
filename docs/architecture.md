@@ -52,3 +52,9 @@ not a claim of live Canvas behavior.
 
 See the [research](research/canvas.md), [MCP rationale](research/mcp.md),
 [build map](build-map.md) and [release gates](release-readiness.md).
+
+Agenda reads share a client and credential load across sources, preserve partial
+failures and stop after 45 seconds overall. JSON reads reject nesting over 100
+levels and excessive structural complexity before parsing; result clipping has a
+separate depth budget. Resource transport neither persists cookies nor emits
+HTTPX request logs containing signed attachment capabilities.

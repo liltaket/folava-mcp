@@ -5,7 +5,9 @@ Local evidence recorded 2026-10-28 on Linux, Python 3.14.4.
 | Check | Evidence |
 | --- | --- |
 | Locked development installation | `uv sync --frozen` completed in a clean project environment. |
-| Automated suite | 116 tests passed, including protocol and local TLS fixtures. |
+| Automated suite | 186 tests passed, including protocol and local TLS fixtures. |
+| Static site | 14 generated pages; internal links/anchors and catalog match validated. |
+| Chromium interactions | Example tabs/keyboard, copy success/denial, search/details/empty state, docs navigation, 320/390px layout passed. |
 | Static checks | Ruff lint and formatting passed. |
 | Distribution build | Wheel and source distribution built successfully. |
 | Standalone wheel | Installed outside the source tree; CLI help and official SDK stdio course call passed. |
@@ -33,3 +35,15 @@ The CI workflow runs the suite and package smoke on Linux Python 3.11–3.14, Wi
 check the [actual GitHub run](https://github.com/liltaket/folava-mcp/actions/workflows/ci.yml).
 No real Canvas OAuth consent, OS-keyring/browser integration, live unread-state
 comparison, or complete Codex/T3 UI workflow was validated in this session.
+
+The 0.1.1 hardening pass adds real localhost OAuth callback exchanges, forged and
+malformed callbacks, partial-request deadlines, concurrent refresh, failed secret
+and metadata writes, SQLite transaction rollback, semantic URL changes, cancellation
+and stream cleanup, partial download rejection, strict JSON and Link parsing, and
+DNS multicast checks. Demo safety/date/file behavior and aggregate agenda deadlines
+have independent regressions. All use fixtures and test secrets.
+
+The independent [0.1.1 review](research/v011-review.md) found a release/deployment
+ordering hazard; the explicit published-release manifest and deployment-time
+installer check address it. The parent ran Chromium checks with the web tools
+installed; the review report correctly distinguishes its own environment limits.

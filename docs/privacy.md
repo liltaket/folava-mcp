@@ -1,9 +1,12 @@
 # Data handling
 
 The connector has no telemetry, analytics, advertising SDK, model SDK or hosted
-Folava backend. It makes requested Canvas reads, metadata-derived attachment
-requests and explicit credential lifecycle requests. Normal DNS, TLS and Canvas
-access logs still exist.
+Folava backend. It makes requested Canvas reads, attachment requests through API
+pointers and S3, and explicit credential lifecycle requests. Normal DNS, TLS and Canvas
+access logs still exist. Canvas may also refresh derived progress caches during
+GET requests; the connector does not promise that remote account state is
+unchanged. The [validation record](validation.md) explains the unresolved sampled
+module-requirement signal.
 
 Your MCP host sends selected tool inputs and Canvas results to the model provider
 you use. Its storage, training and retention terms apply separately. This package

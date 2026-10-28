@@ -7,12 +7,73 @@
     --blue: #2155cd;
     --green: #16725b;
     --line: #d4dfe9;
+    --input-line: #8196aa;
+    --action: #2155cd;
+    --action-hover: #1944aa;
+    --on-action: #fff;
+    --active: #e8efff;
+    --sample-shadow: #ecf0f6;
+    --quote-line: #9bb5ec;
+    --focus: #a94b00;
+    --selection: #dbe6ff;
+    --status: #172c41;
+    --on-status: #fff;
+    --band: #2155cd;
+    --on-band: #fff;
+    --band-muted: #e0e9ff;
     --radius: 14px;
     font-family: Aptos, "Segoe UI", Candara, sans-serif;
     font-size: 17px;
     line-height: 1.65;
     color: var(--ink);
     background: var(--paper)
+}
+
+:root[data-theme=dark] {
+    color-scheme: dark;
+    --paper: #142333;
+    --fog: #1c2e41;
+    --ink: #e5edf5;
+    --muted: #adbed0;
+    --blue: #a9c4ff;
+    --green: #8ad9bd;
+    --line: #40556c;
+    --input-line: #768da5;
+    --action: #a9c4ff;
+    --action-hover: #c5d7ff;
+    --on-action: #142f63;
+    --active: #2a4263;
+    --sample-shadow: #0c1a28;
+    --quote-line: #698dc5;
+    --focus: #ffc083;
+    --selection: #37577e;
+    --status: #e5edf5;
+    --on-status: #142333;
+}
+
+/* Also follow the OS when JavaScript is unavailable. */
+@media(prefers-color-scheme:dark) {
+    :root:not([data-theme]) {
+        color-scheme: dark;
+        --paper: #142333;
+        --fog: #1c2e41;
+        --ink: #e5edf5;
+        --muted: #adbed0;
+        --blue: #a9c4ff;
+        --green: #8ad9bd;
+        --line: #40556c;
+        --input-line: #768da5;
+        --action: #a9c4ff;
+        --action-hover: #c5d7ff;
+        --on-action: #142f63;
+        --active: #2a4263;
+        --sample-shadow: #0c1a28;
+        --quote-line: #698dc5;
+        --focus: #ffc083;
+        --selection: #37577e;
+        --status: #e5edf5;
+        --on-status: #142333;
+    }
 }
 
 * {
@@ -29,11 +90,13 @@ a {
 }
 
 a:hover {
-    text-decoration-thickness: 2px
+    text-decoration-thickness: 2px;
+    text-underline-offset: .28em
 }
 
 button,
-input {
+input,
+select {
     font: inherit
 }
 
@@ -47,20 +110,22 @@ button:disabled {
 
 button,
 a,
-input {
+input,
+select {
     touch-action: manipulation
 }
 
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
+select:focus-visible,
 summary:focus-visible {
-    outline: 3px solid #dc6f14;
+    outline: 3px solid var(--focus);
     outline-offset: 4px
 }
 
 ::selection {
-    background: #dbe6ff
+    background: var(--selection)
 }
 
 .wrap {
@@ -134,8 +199,8 @@ td code {
     left: 20px;
     z-index: 10;
     padding: 12px;
-    background: var(--ink);
-    color: #fff
+    background: var(--status);
+    color: var(--on-status)
 }
 
 .skip-link:focus {
@@ -187,8 +252,38 @@ td code {
 }
 
 .site-nav a:hover,
-.site-nav a[aria-current=page] {
+.site-nav a[aria-current] {
     color: var(--blue)
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 24px
+}
+
+.theme-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .76rem;
+    color: var(--muted)
+}
+
+.theme-control select {
+    min-height: 44px;
+    padding: 7px 25px 7px 10px;
+    border: 1px solid var(--input-line);
+    border-radius: 6px;
+    background: var(--paper);
+    color: var(--ink);
+    cursor: pointer
+}
+
+.search-label input::placeholder {
+    color: var(--muted);
+    opacity: 1
 }
 
 .hero {
@@ -236,12 +331,12 @@ td code {
 }
 
 .primary {
-    background: var(--blue);
-    color: #fff
+    background: var(--action);
+    color: var(--on-action)
 }
 
 .primary:hover {
-    background: #1944aa
+    background: var(--action-hover)
 }
 
 .text-link {
@@ -250,10 +345,10 @@ td code {
 }
 
 .sample {
-    border: 1px solid #cad7e3;
+    border: 1px solid var(--line);
     border-radius: 18px;
     background: var(--fog);
-    box-shadow: 12px 18px 0 #ecf0f6;
+    box-shadow: 12px 18px 0 var(--sample-shadow);
     overflow: hidden;
     align-self: center
 }
@@ -278,8 +373,8 @@ td code {
 }
 
 .sample-symbol {
-    background: var(--blue);
-    color: #fff;
+    background: var(--action);
+    color: var(--on-action);
     border-radius: 10px;
     width: 40px;
     height: 44px;
@@ -328,7 +423,7 @@ td code {
 }
 
 .source-row {
-    background: #fff;
+    background: var(--paper);
     padding: 20px;
     border-radius: 10px;
     margin-bottom: 12px
@@ -387,13 +482,13 @@ td code {
 }
 
 .reading-excerpt {
-    border-left: 3px solid #9bb5ec;
+    border-left: 3px solid var(--quote-line);
     padding-left: 14px
 }
 
 .install-band {
-    background: var(--blue);
-    color: #fff;
+    background: var(--band);
+    color: var(--on-band);
     padding: 64px 0
 }
 
@@ -412,11 +507,11 @@ td code {
 }
 
 .install-band a {
-    color: #fff
+    color: var(--on-band)
 }
 
 .install-band .small {
-    color: #e0e9ff;
+    color: var(--band-muted);
     font-size: .76rem;
     margin-top: 20px
 }
@@ -459,7 +554,7 @@ td code {
     top: 6px;
     right: 8px;
     border: 1px solid var(--line);
-    background: #fff;
+    background: var(--paper);
     color: var(--blue);
     font-size: .7rem;
     padding: 4px 10px;
@@ -469,7 +564,7 @@ td code {
 }
 
 .copy-button:hover {
-    background: #e7eeff
+    background: var(--active)
 }
 
 .workflows {
@@ -579,8 +674,8 @@ td code {
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--ink);
-    color: #fff;
+    background: var(--status);
+    color: var(--on-status);
     border-radius: 8px;
     padding: 12px 18px;
     font-size: .8rem;
@@ -636,7 +731,7 @@ td code {
 }
 
 .docs-sidebar a[aria-current=page] {
-    background: #e8efff;
+    background: var(--active);
     color: var(--blue);
     font-weight: 650
 }
@@ -716,7 +811,7 @@ td code {
 }
 
 .prose blockquote {
-    border-left: 3px solid #9bb5ec;
+    border-left: 3px solid var(--quote-line);
     padding-left: 20px;
     color: var(--muted)
 }
@@ -754,8 +849,8 @@ td code {
     display: block;
     width: 100%;
     margin-top: 8px;
-    border: 1px solid #a6b8ca;
-    background: #fff;
+    border: 1px solid var(--input-line);
+    background: var(--paper);
     color: var(--ink);
     border-radius: 7px;
     min-height: 48px;
@@ -776,8 +871,7 @@ td code {
 .operation {
     border: 1px solid var(--line);
     border-radius: 8px;
-    margin-bottom: 10px;
-    overflow: hidden
+    margin-bottom: 10px
 }
 
 .operation summary {
@@ -832,7 +926,7 @@ td code {
 }
 
 .operation-body .code-block {
-    background: #fff;
+    background: var(--paper);
     margin-bottom: 0
 }
 
@@ -908,6 +1002,12 @@ td code {
         gap: 15px
     }
 
+    .header-controls {
+        width: 100%;
+        justify-content: space-between;
+        gap: 8px 16px
+    }
+
     .site-nav {
         gap: 20px
     }
@@ -943,7 +1043,7 @@ td code {
     }
 
     .sample {
-        box-shadow: 6px 9px 0 #ecf0f6;
+        box-shadow: 6px 9px 0 var(--sample-shadow);
         margin-right: 6px
     }
 
@@ -1076,17 +1176,30 @@ td code {
 
 @media(prefers-reduced-motion:no-preference) {
 
-    button,
     a {
-        transition: background-color .15s, color .15s
+        transition: text-underline-offset .15s
     }
 
-    html {
-        scroll-behavior: smooth
+    .hero .sample {
+        animation: sample-arrive .5s ease-out both
+    }
+
+    @keyframes sample-arrive {
+        from { opacity: 0; transform: translateY(7px) }
+        to { opacity: 1; transform: translateY(0) }
     }
 }
 
 @media print {
+    :root[data-theme], :root:not([data-theme]) {
+        color-scheme: light;
+        --paper: #fff;
+        --fog: #f2f5f9;
+        --ink: #172c41;
+        --muted: #526578;
+        --blue: #2155cd;
+        --line: #d4dfe9;
+    }
 
     .site-header,
     .site-footer,

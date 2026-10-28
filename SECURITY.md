@@ -16,15 +16,28 @@ no guaranteed response time. Do not test against accounts you do not own.
   connector cannot sandbox the host.
 - Canvas origin is trusted operator configuration, never an MCP argument. Resource
   requests go through fixed reviewed GET routes and allowlisted query keys.
-- Conversation reads cannot mark content read; the submission read-status include
-  is rejected. Content mutation, uploads, submissions and arbitrary URLs are absent.
-- Public HTTPS destinations are DNS-pinned. API redirects are refused. File
-  redirects are checked, bounded, and lose Canvas authorization off-origin.
+- Conversation detail forces `auto_mark_as_read=false`; submission `read_status`
+  and `read_state` includes are rejected in initial and pagination queries. Known
+  stateful assignment/module-item detail and quiz-submission routes are excluded.
+  Direct page/front-page and individual revision reads are also excluded; see
+  [the current catalog limits](docs/tools.md#excluded-reads).
+- Public HTTPS destinations are DNS-pinned. API redirects are refused. Attachment
+  content uses the fixed file `public_url` API pointer and audited AWS S3 REST
+  destinations only, checked before every hop. Storage requests carry no Canvas
+  authorization or cookies. Canvas UI/file-host downloads, InstFS, CDN, custom
+  and local-storage fallbacks are refused.
 - OAuth callback state is verified. Credentials stay outside tool inputs, config
   snippets, event bodies and diagnostic messages. OAuth itself changes credential
   state separately from read-only learning-resource access.
 - Attachments and course text are untrusted data. No content is executed, no shell
   hooks are provided, and no PDF/archive extraction is attempted.
+
+These controls limit resource actions; they do not promise an unchanged remote
+account. Canvas GET handlers can write ordinary access logs or refresh derived
+progress caches. One Canvas module-requirement comparison was inconclusive, with
+neither the kind of difference nor its cause established. Direct page reads were
+stopped conservatively, without claiming they caused the signal. See
+[validation](docs/validation.md) for the bounded live evidence.
 
 Raw upstream API fields may include signed attachment URLs, private grades, email
 addresses or classmates' posts when the account can see them. A capable agent's

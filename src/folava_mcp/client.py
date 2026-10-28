@@ -23,7 +23,14 @@ from urllib.parse import urljoin, urlsplit
 import httpx
 
 from .catalog import Operation
-from .policy import PolicyError, build_url, operation_path, validate_continuation, validate_origin
+from .policy import (
+    PolicyError,
+    build_url,
+    operation_path,
+    validate_continuation,
+    validate_origin,
+    validate_storage_download,
+)
 
 
 class CanvasError(Exception):
@@ -364,19 +371,8 @@ class CanvasClient:
             )
             remaining -= len(raw)
             page = _decode_json(raw)
-            if op.id == "quiz_submissions" and (
-                not isinstance(page, dict)
-                or not isinstance(page.get("quiz_submissions"), list)
-                or any(not isinstance(values, list) for values in page.values())
-            ):
-                raise CanvasError("upstream", "Invalid quiz submissions envelope.")
             if pages == 0:
                 data = page
-            elif op.id == "quiz_submissions" and isinstance(data, dict) and isinstance(page, dict):
-                for key, values in page.items():
-                    if not isinstance(values, list) or not isinstance(data.get(key, []), list):
-                        raise CanvasError("pagination", "Invalid quiz submissions envelope.")
-                    data.setdefault(key, []).extend(values)
             elif isinstance(data, list) and isinstance(page, list):
                 data.extend(page)
             else:
@@ -390,12 +386,7 @@ class CanvasClient:
             next_url = (
                 validate_continuation(candidate, self.origin, op, path) if candidate else None
             )
-            if op.id == "quiz_submissions":
-                if not isinstance(data, dict) or not isinstance(data.get("quiz_submissions"), list):
-                    raise CanvasError("upstream", "Invalid quiz submissions envelope.")
-                if sum(len(value) for value in data.values() if isinstance(value, list)) > 20_000:
-                    raise CanvasError("too_large", "Response exceeds the item limit.")
-            if next_url and not isinstance(data, list) and op.id != "quiz_submissions":
+            if next_url and not isinstance(data, list):
                 raise CanvasError(
                     "pagination", "Canvas returned pagination for a non-list response."
                 )
@@ -423,27 +414,21 @@ class CanvasClient:
                     raise CanvasError("forbidden", "Canvas file is locked or hidden for this user.")
                 if isinstance(metadata.get("size"), (int, float)) and metadata["size"] > max_bytes:
                     raise CanvasError("too_large", "File exceeds the configured byte limit.")
-                url = metadata.get("url")
+                # Never request metadata.url: the Canvas file controller can
+                # change progress, including its preview-only permission fallback.
+                pointer = await self.read("file_download_url", {"file_id": file_id})
+                pointer_data = pointer["data"]
+                url = pointer_data.get("public_url") if isinstance(pointer_data, dict) else None
                 if not isinstance(url, str):
-                    raise CanvasError("upstream", "Canvas file has no download URL.")
-                authorize = True
+                    raise CanvasError("upstream", "Canvas returned no storage download URL.")
                 seen: set[str] = set()
                 for _ in range(6):
-                    parsed = urlsplit(url)
-                    same_origin = (parsed.scheme + "://" + parsed.netloc).lower() == self.origin
-                    authorize = authorize and same_origin
-                    # Only the file download UI route is allowed on the credentialed origin.
-                    if same_origin and not re.fullmatch(
-                        r"/(?:[^/?]+/[^/?]+/)?files/[A-Za-z0-9_-]+/download", parsed.path
-                    ):
-                        raise CanvasError(
-                            "policy", "Canvas file metadata has an unexpected download path."
-                        )
+                    url = validate_storage_download(url, self.origin)
                     if url in seen:
                         raise CanvasError("redirect", "File download contains a redirect cycle.")
                     seen.add(url)
                     body, headers, status = await self._request(
-                        url, authorize=authorize, max_bytes=max_bytes, redirects=True
+                        url, authorize=False, max_bytes=max_bytes, redirects=True
                     )
                     if 300 <= status < 400:
                         location = headers.get("location")
@@ -495,6 +480,8 @@ class CanvasClient:
                         result["content_base64"] = base64.b64encode(body).decode("ascii")
                     return result
                 raise CanvasError("redirect", "File download exceeded the redirect limit.")
+        except PolicyError as error:
+            raise CanvasError("policy", str(error)) from None
         except TimeoutError:
             raise CanvasError("timeout", "File download exceeded its time limit.", True) from None
         except (ValueError, UnicodeError):

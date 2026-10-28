@@ -1,4 +1,14 @@
 (() => {
+  const themeControl = document.getElementById('theme-choice');
+  if (themeControl && window.folavaTheme) {
+    const syncTheme = () => { themeControl.value = window.folavaTheme.getPreference(); };
+    syncTheme();
+    themeControl.closest('.theme-control').hidden = false;
+    themeControl.addEventListener('change', () => {
+      window.folavaTheme.setPreference(themeControl.value);
+    });
+    window.addEventListener('themechange', syncTheme);
+  }
   const status = document.getElementById('copy-status');
   let clearStatus;
   document.querySelectorAll('[data-copy]').forEach(button => {

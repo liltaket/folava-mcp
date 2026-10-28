@@ -1,6 +1,22 @@
 # Validation evidence
 
-Local evidence recorded 2026-10-28 on Linux, Python 3.14.4.
+Evidence recorded 2026-10-28. Current 0.1.3 local evidence on Linux,
+Python 3.14.4:
+
+| Check | Evidence |
+| --- | --- |
+| Automated suite | 247 tests passed, including the stricter GET boundary, storage and live-harness diagnostics. |
+| Static checks | Ruff lint/format and Git whitespace checks passed. |
+| Static site | 15 generated pages and 94 registry-derived operations; internal links and catalog match checked. |
+| Chromium interactions | System/light/dark themes, persistence, blocked storage, pre-paint initialization, no-JS fallback, contrast, reduced motion, keyboard, copy, search and 320/390px layouts passed. |
+| Dependency advisories | `pip-audit` reported no known vulnerabilities in 45 locked runtime dependencies selected on Linux. This is a dated advisory check, not a security guarantee. |
+| Independent review | Sol source review identified GET side effects; Astra's final pass found no new concrete bypass. See [read safety](research/read-safety.md). |
+| Distribution | Wheel and source distribution built; the wheel installed outside the checkout and passed version/catalog checks, an official SDK stdio read and excluded-operation refusals. |
+
+The following table preserves the earlier 0.1.2
+software/site baseline on Linux, Python 3.14.4; it is not a test count for
+later safety changes. Current scenarios and optional live commands are in the
+[testing guide](testing.md).
 
 | Check | Evidence |
 | --- | --- |
@@ -35,8 +51,9 @@ security audit or institutional authorization.
 The CI workflow runs the suite and package smoke on Linux Python 3.11–3.14, Windows
 3.14 and macOS 3.14. Workflow configuration alone is not evidence all runs passed;
 check the [actual GitHub run](https://github.com/liltaket/folava-mcp/actions/workflows/ci.yml).
-No real Canvas OAuth consent, OS-keyring/browser integration, live unread-state
-comparison, or complete Codex/T3 UI workflow was validated in this session.
+The checks above do not establish real Canvas OAuth consent,
+OS-keyring/browser integration, live unread-state invariance, or a complete
+Codex/T3 UI workflow. The bounded real-account evidence below is separate.
 
 The 0.1.1 hardening pass adds real localhost OAuth callback exchanges, forged and
 malformed callbacks, partial-request deadlines, concurrent refresh, failed secret
@@ -55,3 +72,19 @@ the 0.1.1 local pass: Windows lock-byte initialization before lock acquisition,
 and reverse DNS during numeric loopback server startup on macOS. Version 0.1.2
 removes both dependencies. The no-DNS regression is deterministic locally; the
 concurrent-refresh test exercises the Windows lock behavior on Windows CI.
+
+## Read-safety follow-up and real-account sample
+
+A subsequent source review identified stateful GET behavior in assignment detail,
+Horizon module-item detail and quiz-submission routes, plus both submission
+read-state include spellings. Those routes/includes are now excluded. Attachment
+content now uses metadata and the fixed `public_url` API pointer, allowing only
+audited AWS S3 REST destinations without Canvas authorization or cookies. UI,
+InstFS, CDN, custom and local-storage fallback downloads are refused.
+
+Limited private checks exercised permitted reads and stdio. A module comparison was inconclusive; its type and cause were not established. Institution and account details are omitted.
+
+Canvas may update ordinary access logs and refresh derived progress caches even
+on GET. These samples are not a complete account crawl or proof of an unchanged
+account. See [testing](testing.md#limited-deployment-evidence) for the scenario bounds,
+credential handling and remaining evidence gaps.

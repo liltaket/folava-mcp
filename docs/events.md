@@ -3,6 +3,9 @@
 The poller makes read-only REST requests and compares a complete collection with
 its previous snapshot. It is useful for a scheduled study assistant, not a complete
 Canvas audit log. Changes that occur and disappear between polls can be missed.
+Polling uses the same [catalog exclusions](tools.md#excluded-reads) as direct
+reads. Canvas can update access logs and derived caches even during GET; polling
+is not evidence that the upstream account remains unchanged.
 
 ```sh
 folava-mcp poll assignments \

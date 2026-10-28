@@ -113,10 +113,15 @@ def test_calendar_does_not_silently_drop_extra_contexts():
 
 
 def test_swedish_page_slug_encoded_as_one_path_segment():
-    _, path = operation_path("page", {"course_id": "1", "page_url": "övningar-för-studenter"})
-    assert path == "/api/v1/courses/1/pages/%C3%B6vningar-f%C3%B6r-studenter"
+    _, path = operation_path(
+        "page_revisions", {"course_id": "1", "page_url": "övningar-för-studenter"}
+    )
+    assert path == "/api/v1/courses/1/pages/%C3%B6vningar-f%C3%B6r-studenter/revisions"
     url = "https://canvas.example" + path + "?page=2"
-    assert validate_continuation(url, "https://canvas.example", OPERATIONS["page"], path) == url
+    assert (
+        validate_continuation(url, "https://canvas.example", OPERATIONS["page_revisions"], path)
+        == url
+    )
 
 
 def test_international_domain_is_canonical_ascii_origin():
@@ -133,3 +138,63 @@ def test_non_object_path_is_rejected_consistently(path):
 def test_falsey_non_object_query_is_rejected_consistently(query):
     with pytest.raises(PolicyError):
         validate_query(OPERATIONS["courses"], query)
+
+
+@pytest.mark.parametrize(
+    "include", ["read_state", "READ_STATE", "submission,read_state", "submission[read_state]"]
+)
+def test_submission_read_state_alias_is_forbidden(include):
+    with pytest.raises(PolicyError):
+        validate_query(OPERATIONS["submission"], {"include[]": [include]})
+
+
+@pytest.mark.parametrize("include", ["read_state", "%72ead_state", "read_status"])
+def test_pagination_read_state_alias_is_forbidden(include):
+    url = (
+        "https://canvas.example/api/v1/courses/1/assignments/2/submissions/self?include%5B%5D="
+        + include
+    )
+    with pytest.raises(PolicyError):
+        validate_continuation(
+            url,
+            "https://canvas.example",
+            OPERATIONS["submission"],
+            "/api/v1/courses/1/assignments/2/submissions/self",
+        )
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://bucket.s3.amazonaws.com/object?X-Amz-Signature=preserve%2Fexact",
+        "https://s3.amazonaws.com/bucket/object?Signature=private",
+        "https://bucket.s3.eu-north-1.amazonaws.com/object",
+        "https://bucket.s3-us-east-1.amazonaws.com/object",
+        "https://bucket.s3.dualstack.us-east-1.amazonaws.com/object",
+    ],
+)
+def test_only_audited_s3_rest_storage_urls_are_preserved_exactly(url):
+    from folava_mcp.policy import validate_storage_download
+
+    assert validate_storage_download(url, "https://canvas.example") == url
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://canvas.example/files/1/download?preview=1",
+        "https://files.canvas.example/files/1/download?sf_verifier=private",
+        "https://bucket.s3.amazonaws.com.evil.example/object",
+        "https://evil.example/bucket.s3.amazonaws.com/object",
+        "https://bucket.s3-website-us-east-1.amazonaws.com/object",
+        "https://bucket.s3.amazonaws.com/files/1/download?preview=1",
+        "https://bucket.s3.amazonaws.com/object#fragment",
+        "https://user:private@bucket.s3.amazonaws.com/object",
+        "https://instfs.example/object",
+    ],
+)
+def test_canvas_and_unreviewed_storage_destinations_are_rejected(url):
+    from folava_mcp.policy import validate_storage_download
+
+    with pytest.raises(PolicyError):
+        validate_storage_download(url, "https://canvas.example")

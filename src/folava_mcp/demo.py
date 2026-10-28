@@ -75,7 +75,6 @@ class DemoClient:
             "courses": [course],
             "course": course,
             "assignments": [assignment],
-            "assignment": assignment,
             "submission": submission,
             "modules": [{"id": 401, "name": "Week 1 · Observe", "position": 1}],
             "module_items": [
@@ -87,13 +86,18 @@ class DemoClient:
                     "position": 1,
                 }
             ],
-            "pages": [{"page_id": 501, "url": "reading-notes", "title": "Reading notes"}],
-            "page": {
-                "page_id": 501,
-                "url": "reading-notes",
-                "title": "Reading notes",
-                "body": "<p>Observation begins with careful notes.</p>",
-            },
+            "pages": [
+                {
+                    "page_id": 501,
+                    "url": "reading-notes",
+                    "title": "Reading notes",
+                    **(
+                        {"body": "<p>Observation begins with careful notes.</p>"}
+                        if "body" in safe_query.get("include[]", [])
+                        else {}
+                    ),
+                }
+            ],
             "files": [
                 {
                     "id": 601,
@@ -147,6 +151,10 @@ class DemoClient:
                 }
             ]
         if isinstance(result, list):
+            if operation == "assignments" and "assignment_ids[]" in safe_query:
+                result = [
+                    item for item in result if str(item["id"]) in safe_query["assignment_ids[]"]
+                ]
             if (
                 safe_query.get("context_codes[]")
                 and "course_101" not in safe_query["context_codes[]"]

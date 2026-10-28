@@ -111,3 +111,11 @@ def test_file_hash_mismatch_creates_nothing(tmp_path, monkeypatch):
     result = runner.invoke(app, ["file", "42", "--output", str(target)])
     assert result.exit_code == 1
     assert not target.exists()
+
+
+def test_default_oauth_scopes_exclude_page_detail_and_keep_page_collection():
+    from folava_mcp.cli import DEFAULT_SCOPES
+
+    assert "url:GET|/api/v1/courses/:course_id/pages" in DEFAULT_SCOPES
+    assert "url:GET|/api/v1/courses/:course_id/pages/:url_or_id" not in DEFAULT_SCOPES
+    assert not any("/front_page" in scope or "/revisions/" in scope for scope in DEFAULT_SCOPES)

@@ -37,16 +37,15 @@ DEFAULT_SCOPES = [
     "url:GET|/api/v1/courses",
     "url:GET|/api/v1/courses/:id",
     "url:GET|/api/v1/courses/:course_id/assignments",
-    "url:GET|/api/v1/courses/:course_id/assignments/:id",
     "url:GET|/api/v1/courses/:course_id/assignments/:assignment_id/submissions/:user_id",
     "url:GET|/api/v1/calendar_events",
     "url:GET|/api/v1/planner/items",
     "url:GET|/api/v1/courses/:course_id/modules",
     "url:GET|/api/v1/courses/:course_id/modules/:module_id/items",
     "url:GET|/api/v1/courses/:course_id/pages",
-    "url:GET|/api/v1/courses/:course_id/pages/:url_or_id",
     "url:GET|/api/v1/courses/:course_id/files",
     "url:GET|/api/v1/files/:id",
+    "url:GET|/api/v1/files/:id/public_url",
     "url:GET|/api/v1/announcements",
 ]
 

@@ -6,7 +6,7 @@ LLM SDK or background service is required.
 ```text
 MCP tools ─┐
 CLI reads ─┼─ CanvasClient ─ policy + catalog ─ public HTTPS Canvas REST
-Poller ────┘        └─ metadata-derived file download ─ public HTTPS storage
+Poller ────┘        └─ file metadata + public_url API ─ audited S3 REST storage
 
 Human auth CLI ─ OAuth credential lifecycle ─ OS keyring
                        └─ secret-free profile metadata
@@ -18,14 +18,20 @@ Poller ─ private SQLite hashes + replayable observations
 queries. `client.py` offers only resource GETs. Stateful/ambiguous action endpoints
 and POST GraphQL are excluded; there is no unsafe escape hatch. Broad coverage
 means reviewed API resources within current permissions, not every Canvas feature.
+Known stateful detail routes and unresolved direct page reads are excluded; page
+collections with optional bodies remain available. See
+[excluded reads](tools.md#excluded-reads).
+Canvas access logging and derived-cache refreshes can still occur during GET.
 
 Requests use HTTPS port 443, no environment proxies, public-only DNS resolution
 and a pinned TCP destination with the original Host and TLS SNI. Mixed public and
 private DNS answers fail closed. Keepalive is disabled to prevent TLS connection
 reuse across original hostnames sharing a pinned IP. API redirects are refused;
-file redirects are individually checked and never forward Canvas authorization
-across origins. A trusted injected HTTP transport exists only for deterministic
-unit tests. Private-network Canvas installations require a separately designed
+attachment content accepts audited AWS S3 REST endpoints only, with every hop
+validated before networking and no Canvas authorization or cookies. Metadata UI
+URLs are never fetched. Canvas/local file routes, InstFS, CDN and custom storage
+backends are refused. A trusted injected HTTP transport exists only for
+deterministic unit tests. Private-network Canvas installations require a separately designed
 narrow network policy; there is no global disable-security option.
 
 Resource reads allow 1–20 pages, 20,000 items, up to 10 MB decoded JSON per response

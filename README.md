@@ -77,14 +77,21 @@ on your institution, account permissions and OAuth scopes.
 Tool annotations describe the intent; the HTTP boundary enforces it. Agent tools
 cannot select an HTTP method, supply an arbitrary destination, submit an
 assignment, or run an upload. Conversation reads disable automatic marking as
-read. Submission reads reject the `read_status` option, which changes Canvas
-state. OAuth token exchange and revocation are separate credential operations.
+read. Submission reads reject both `read_status` and `read_state` includes. Known
+stateful GET routes and unresolved page-detail reads are excluded; use the
+supported collections in the [tool guide](docs/tools.md). OAuth token exchange
+and revocation are separate credential operations.
 
-Attachments come from file metadata and pass HTTPS, public-address DNS pinning,
-redirect, byte and time limits. The Canvas token never travels to a different
-origin. Credentials stay outside tool arguments and generated client config.
+Attachment reads obtain file metadata and the fixed API storage pointer, then
+accept only audited AWS S3 REST destinations without Canvas authorization or
+cookies. Canvas download/preview routes and other storage backends are refused.
+HTTPS, public-address DNS pinning, redirect, byte and time limits still apply.
+Credentials stay outside tool arguments and generated client config.
 
-Canvas still records normal access logs. Viewing content through external clients
+GET does not mean the account is byte-for-byte unchanged: Canvas can record
+access logs and refresh derived progress caches. A sampled Canvas progress comparison
+was inconclusive; page causality was not established. See the
+[validation evidence](docs/validation.md). Viewing content through external clients
 can share that content with the model provider you chose. See [security](SECURITY.md)
 and [privacy](docs/privacy.md).
 
@@ -119,7 +126,7 @@ See [site development](docs/site.md) for browser checks and deployment.
 The suite includes real MCP stdio handshakes against synthetic data, hostile URL
 and query cases, pagination, authentication, attachment boundaries and durable
 polling. Mock-backed checks are distinct from live institution and client testing;
-see [validation](docs/validation.md).
+see [validation](docs/validation.md) and the [testing guide](docs/testing.md).
 
 [Contributions](CONTRIBUTING.md) are welcome. Read-only safety and clear error
 reporting are release requirements. Inspired by the student-first principles of

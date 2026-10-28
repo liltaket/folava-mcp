@@ -15,7 +15,8 @@ uv build
 Use a small pull request with a concrete before/after description and the checks
 you actually ran. Distinguish fixture tests, protocol tests and live Canvas checks.
 No live Canvas credentials are required by CI. Contributions are under Apache-2.0;
-by submitting a change you confirm you have the right to contribute it.
+by submitting a change you confirm you have the right to contribute it. Use the
+[testing guide](docs/testing.md) for scenario coverage and optional live checks.
 
 ## Adding API coverage
 
@@ -26,8 +27,11 @@ Reject undocumented or ambiguous action endpoints until verified. Include a test
 asserting the emitted method, path, accepted input and relevant unsafe variants.
 
 The common policy must cover named tools, discovered reads, pagination and the
-poller. File URLs must come from authenticated metadata and pass the same network
-boundary. Credential operations belong in `auth.py` and never become agent tools.
+poller. Attachment content must come through authenticated metadata and the fixed
+`public_url` API pointer, then pass the audited S3-only download boundary on every
+hop without Canvas authorization or cookies. Do not re-enable UI/preview routes
+or unsupported storage as a fallback. Credential operations belong in `auth.py`
+and never become agent tools.
 Scope strings require exact official placeholders, not generated friendly names.
 
 Prefer small dependencies, bounded resource use, actionable errors, and returning

@@ -6,7 +6,7 @@ import re
 from typing import Any
 from urllib.parse import parse_qsl, quote, urlencode, urlsplit
 
-from .catalog import OPERATIONS, Operation
+from .catalog import DISABLED_OPERATIONS, OPERATIONS, Operation
 
 
 class PolicyError(ValueError):
@@ -39,6 +39,8 @@ def validate_origin(value: str) -> str:
 
 
 def operation_path(operation: str, path: dict[str, str] | None) -> tuple[Operation, str]:
+    if isinstance(operation, str) and operation in DISABLED_OPERATIONS:
+        raise PolicyError(DISABLED_OPERATIONS[operation])
     if not isinstance(operation, str) or operation not in OPERATIONS:
         raise PolicyError("Unknown operation; use discover to find reviewed reads.")
     op = OPERATIONS[operation]
@@ -77,9 +79,11 @@ def validate_query(op: Operation, query: dict[str, Any] | None) -> dict[str, Any
             if len(text) > 2000 or any(ord(char) < 32 for char in text):
                 raise PolicyError("Query value exceeds the allowed bounds.")
             # Reject broadly, including comma-separated and nested association syntax.
-            if key.startswith("include") and "read_status" in text.lower():
+            if key.startswith("include") and any(
+                name in text.lower() for name in ("read_status", "read_state")
+            ):
                 raise PolicyError(
-                    "read_status is forbidden because Canvas marks submissions as read."
+                    "Read-state includes are forbidden because Canvas marks submissions as read."
                 )
             converted.append(text)
         if key == "auto_mark_as_read" and converted != ["false"]:
@@ -137,3 +141,34 @@ def validate_continuation(value: str, origin: str, op: Operation, path: str) -> 
         return build_url(origin, op, path, query)
     except (ValueError, UnicodeError) as error:
         raise PolicyError("Unsafe pagination link was rejected.") from error
+
+
+def validate_storage_download(value: str, canvas_origin: str) -> str:
+    """Allow only audited S3 REST object storage, never a Canvas file controller.
+
+    Canvas public_url can fall back to /files/:id/download on local storage.
+    That GET can change module completion even with preview=1. InstFS, CDN and
+    custom S3 endpoints need their own source audit before being enabled.
+    """
+    try:
+        url = urlsplit(value)
+        origin = validate_origin(url.scheme + "://" + url.netloc)
+        region = r"[a-z]{2}(?:-gov)?-[a-z]+-[0-9]+"
+        endpoint = rf"s3(?:[.-]{region}|\.dualstack\.{region})?\.amazonaws\.com"
+        host = url.hostname or ""
+        if (
+            origin == canvas_origin
+            or url.fragment
+            or "\\" in value
+            or any(ord(char) < 33 for char in value)
+            or not re.fullmatch(rf"(?:[a-z0-9][a-z0-9.-]*\.)?{endpoint}", host)
+            or re.search(r"(?:^|/)files/[^/]+/(?:download|preview)(?:/|$)", url.path)
+        ):
+            raise PolicyError(
+                "Canvas file routes are excluded; content requires audited S3 storage."
+            )
+        return value  # Preserve the signed path/query exactly.
+    except (ValueError, UnicodeError):
+        raise PolicyError(
+            "File content requires audited direct S3 storage; this destination is unsupported."
+        ) from None

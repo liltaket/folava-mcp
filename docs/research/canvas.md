@@ -1,5 +1,12 @@
 # Canvas API research — 2026-10-28
 
+> Historical research note: current implementation excludes assignment/module-item
+> detail, quiz-submission, direct page/front-page and individual revision reads.
+> Attachment content now requires the fixed public_url API pointer and audited
+> AWS S3 REST storage. See the [current tool boundary](../tools.md#excluded-reads)
+> and [validation evidence](../validation.md); older candidate routes below are
+> not an instruction to call them.
+
 ## Recommended architecture
 
 A local-first MCP server over stdio is the smallest reliable deployment for students' own agent clients. Separate a narrowly audited GET-only Canvas transport, resource tools, credential lifecycle, and a polling change feed. Keep credential setup outside model-visible tool arguments. Offer per-machine authentication rather than distributing one credential in client configs. A hosted multi-user variant needs institution OAuth developer keys and an actual authenticated MCP perimeter; do not present an unauthenticated HTTP server as cross-device convenience.

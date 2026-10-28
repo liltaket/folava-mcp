@@ -30,6 +30,7 @@ DOCUMENTS = {
     "privacy": ("Data handling", "docs/privacy.md"),
     "release-readiness": ("Deployment limits", "docs/release-readiness.md"),
     "validation": ("Validation", "docs/validation.md"),
+    "testing": ("Test scenarios", "docs/testing.md"),
     "contributing": ("Contribute", "CONTRIBUTING.md"),
     "security": ("Security", "SECURITY.md"),
     "changelog": ("Changelog", "CHANGELOG.md"),
@@ -71,7 +72,10 @@ def relative_base(route: str, base_path: str) -> str:
 
 def frame(title: str, content: str, base: str, *, route: str, active: str = "") -> str:
     def nav(label, path, key):
-        current = ' aria-current="page"' if active == key else ""
+        current = ""
+        if active == key:
+            value = "page" if route == path + "index.html" else "location"
+            current = f' aria-current="{value}"'
         return f'<a href="{base}{path}"{current}>{label}</a>'
 
     canonical = SITE + route.removesuffix("index.html")
@@ -79,13 +83,14 @@ def frame(title: str, content: str, base: str, *, route: str, active: str = "") 
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{ESC(title)} · Folava MCP</title>
 <meta name="description" content="Read-only Canvas LMS access for your agents. Install Folava MCP, explore the tools, and connect your own environment.">
-<meta name="theme-color" content="#2155cd"><meta name="color-scheme" content="light">
+<meta name="theme-color" content="#ffffff"><meta name="color-scheme" content="light dark">
 <link rel="canonical" href="{canonical}"><link rel="icon" href="{base}assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="{base}assets/site.css"><script defer src="{base}assets/site.js"></script>
+<script src="{base}assets/theme.js"></script><link rel="stylesheet" href="{base}assets/site.css"><script defer src="{base}assets/site.js"></script>
 </head><body><a class="skip-link" href="#main">Skip to content</a>
 <header class="site-header"><div class="wrap header-inner"><a class="brand" href="{base}" aria-label="Folava MCP home">folava <span>MCP</span></a>
-<nav class="site-nav" aria-label="Main navigation">{nav("Guide", "docs/getting-started/", "docs")}{nav("API catalog", "catalog/", "catalog")}<a href="{REPO}">GitHub</a></nav></div></header>
-<main id="main">{content}</main>
+<div class="header-controls"><nav class="site-nav" aria-label="Main navigation">{nav("Guide", "docs/getting-started/", "docs")}{nav("API catalog", "catalog/", "catalog")}<a href="{REPO}">GitHub</a></nav>
+<label class="theme-control" hidden for="theme-choice"><span>Theme</span><select id="theme-choice"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label></div></div></header>
+<main id="main" tabindex="-1">{content}</main>
 <footer class="site-footer"><div class="wrap footer-inner"><p>Folava MCP · Independent open source · Apache-2.0</p><div class="footer-links"><a href="{base}docs/security/">Security</a><a href="{REPO}/releases">Releases</a><a href="{REPO}/issues">Issues</a></div></div></footer>
 <div id="copy-status" class="copy-status" role="status" aria-live="polite"></div>
 </body></html>'''

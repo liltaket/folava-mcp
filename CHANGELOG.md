@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.1.3 — stricter reads and coherent themes
+
+Upgrade from earlier previews before connecting a real account. HTTP GET alone
+does not establish a read-only operation in Canvas.
+
+- Excluded assignment and module-item detail routes that can mark progress, quiz
+  submission routes that can grade or repair records, and submission `read_state`
+  includes. Read assignments through the filtered collection instead.
+- Excluded direct page/front-page reads conservatively after an inconclusive live
+  progress observation; no page-GET causality is established. Read page bodies
+  with `pages` / `group_pages` and `include[]=body` where permitted. Excluded
+  individual page revisions because Canvas can repair revision records on GET.
+- Fetch attachments through the permission-checked public URL API and direct S3
+  REST storage only. Canvas download pages and unreviewed storage routes fail
+  closed; signed URLs and credentials are never sent together.
+- Added an opt-in live validation harness with an independent GET/API guard,
+  request/deadline budgets and summaries without personal payloads. Progress
+  comparisons distinguish membership, completion and requirement metadata.
+- Added persistent System, Light and Dark themes across the site, first-paint
+  initialization, restrained motion and reduced-motion support. Expanded browser
+  checks cover contrast, keyboard use, mobile layouts and storage failures.
+- Recorded actual deployment/stdio evidence and its limits in the test scenarios guide.
+  Attachment content and unchanged account state have not been established by
+  that live run.
+
 ## 0.1.2 — cross-platform authentication fixes
 
 - Start the numeric loopback OAuth listener without a reverse DNS lookup, which

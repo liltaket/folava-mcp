@@ -1,0 +1,21 @@
+name: Bug report
+description: Report a reproducible problem without private Canvas data.
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      description: Include a minimal anonymized reproduction. Never include tokens, signed URLs or private coursework.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version, operating system and MCP host
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Validation and safe diagnostic details
+      description: Distinguish synthetic/demo, automated and live account behavior.

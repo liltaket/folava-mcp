@@ -1,0 +1,15 @@
+name: Workflow request
+description: Describe a concrete student or agent workflow.
+body:
+  - type: textarea
+    id: workflow
+    attributes:
+      label: What should someone be able to do?
+      description: Explain the outcome and relevant Canvas resource. Do not include private data.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: API documentation and constraints
+      description: A link to the official read endpoint helps. State permission or read-state concerns if known.

@@ -37,4 +37,4 @@ jobs:
       - run: uv run python scripts/check_public.py
       - run: uv run pytest -q
       - run: uv build
-      - run: uv run --no-project --with ./dist/folava_mcp-0.1.4-py3-none-any.whl folava-mcp --help
+      - run: uv run python scripts/check_wheel.py

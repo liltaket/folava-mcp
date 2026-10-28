@@ -1,26 +1,25 @@
 :root {
     color-scheme: light;
-    --paper: #fff;
-    --fog: #f2f5f9;
-    --ink: #172c41;
-    --muted: #526578;
-    --blue: #2155cd;
-    --green: #16725b;
-    --line: #d4dfe9;
-    --input-line: #8196aa;
-    --action: #2155cd;
-    --action-hover: #1944aa;
-    --on-action: #fff;
-    --active: #e8efff;
-    --sample-shadow: #ecf0f6;
-    --quote-line: #9bb5ec;
-    --focus: #a94b00;
-    --selection: #dbe6ff;
-    --status: #172c41;
-    --on-status: #fff;
-    --band: #2155cd;
-    --on-band: #fff;
-    --band-muted: #e0e9ff;
+    --paper: #ffffff;
+    --fog: #f5f5f5;
+    --ink: #242426;
+    --muted: #66666b;
+    --link: #39393d;
+    --label: #5e5e63;
+    --line: #dedee2;
+    --input-line: #8a8a91;
+    --action: #2b2b2f;
+    --action-hover: #414146;
+    --on-action: #ffffff;
+    --active: #eaeaec;
+    --quote-line: #aaaab1;
+    --focus: #3e3e43;
+    --selection: #dedee4;
+    --status: #242426;
+    --on-status: #ffffff;
+    --band: #f4f4f5;
+    --on-band: #242426;
+    --band-muted: #626269;
     --radius: 14px;
     font-family: Aptos, "Segoe UI", Candara, sans-serif;
     font-size: 17px;
@@ -31,48 +30,52 @@
 
 :root[data-theme=dark] {
     color-scheme: dark;
-    --paper: #142333;
-    --fog: #1c2e41;
-    --ink: #e5edf5;
-    --muted: #adbed0;
-    --blue: #a9c4ff;
-    --green: #8ad9bd;
-    --line: #40556c;
-    --input-line: #768da5;
-    --action: #a9c4ff;
-    --action-hover: #c5d7ff;
-    --on-action: #142f63;
-    --active: #2a4263;
-    --sample-shadow: #0c1a28;
-    --quote-line: #698dc5;
-    --focus: #ffc083;
-    --selection: #37577e;
-    --status: #e5edf5;
-    --on-status: #142333;
+    --paper: #18181b;
+    --fog: #232326;
+    --ink: #eeeeef;
+    --muted: #b1b1b7;
+    --link: #e0e0e4;
+    --label: #bdbdc2;
+    --line: #414147;
+    --input-line: #808087;
+    --action: #ededf0;
+    --action-hover: #ffffff;
+    --on-action: #232326;
+    --active: #303036;
+    --quote-line: #66666f;
+    --focus: #d0d0d5;
+    --selection: #4a4a53;
+    --status: #f1f1f3;
+    --on-status: #242426;
+    --band: #202023;
+    --on-band: #eeeeef;
+    --band-muted: #b1b1b7;
 }
 
 /* Also follow the OS when JavaScript is unavailable. */
 @media(prefers-color-scheme:dark) {
     :root:not([data-theme]) {
         color-scheme: dark;
-        --paper: #142333;
-        --fog: #1c2e41;
-        --ink: #e5edf5;
-        --muted: #adbed0;
-        --blue: #a9c4ff;
-        --green: #8ad9bd;
-        --line: #40556c;
-        --input-line: #768da5;
-        --action: #a9c4ff;
-        --action-hover: #c5d7ff;
-        --on-action: #142f63;
-        --active: #2a4263;
-        --sample-shadow: #0c1a28;
-        --quote-line: #698dc5;
-        --focus: #ffc083;
-        --selection: #37577e;
-        --status: #e5edf5;
-        --on-status: #142333;
+        --paper: #18181b;
+        --fog: #232326;
+        --ink: #eeeeef;
+        --muted: #b1b1b7;
+        --link: #e0e0e4;
+        --label: #bdbdc2;
+        --line: #414147;
+        --input-line: #808087;
+        --action: #ededf0;
+        --action-hover: #ffffff;
+        --on-action: #232326;
+        --active: #303036;
+        --quote-line: #66666f;
+        --focus: #d0d0d5;
+        --selection: #4a4a53;
+        --status: #f1f1f3;
+        --on-status: #242426;
+        --band: #202023;
+        --on-band: #eeeeef;
+        --band-muted: #b1b1b7;
     }
 }
 
@@ -85,7 +88,7 @@ body {
 }
 
 a {
-    color: var(--blue);
+    color: var(--link);
     text-underline-offset: .22em
 }
 
@@ -260,7 +263,7 @@ td code {
 
 .site-nav a:hover,
 .site-nav a[aria-current] {
-    color: var(--blue)
+    color: var(--link)
 }
 
 .header-controls {
@@ -302,7 +305,7 @@ td code {
 }
 
 .release-note {
-    color: var(--green);
+    color: var(--label);
     font-size: .85rem;
     font-weight: 650;
     margin-bottom: 26px
@@ -342,7 +345,6 @@ td code {
     border: 1px solid var(--line);
     border-radius: 18px;
     background: var(--fog);
-    box-shadow: 10px 14px 0 var(--sample-shadow);
     min-width: 0
 }
 
@@ -394,7 +396,7 @@ td code {
     border: 1px solid var(--line);
     border-radius: 6px;
     background: var(--paper);
-    color: var(--blue);
+    color: var(--link);
     font-size: .75rem;
     cursor: pointer
 }
@@ -434,7 +436,6 @@ td code {
     border: 1px solid var(--line);
     border-radius: 18px;
     background: var(--fog);
-    box-shadow: 12px 18px 0 var(--sample-shadow);
     overflow: hidden;
     align-self: center
 }
@@ -490,8 +491,8 @@ td code {
 }
 
 .example-tabs button[aria-selected=true] {
-    border-color: var(--blue);
-    color: var(--blue);
+    border-color: var(--link);
+    color: var(--link);
     font-weight: 650
 }
 
@@ -516,7 +517,7 @@ td code {
 }
 
 .source-type {
-    color: var(--green);
+    color: var(--label);
     font-size: .68rem;
     line-height: 1.3;
     font-weight: 650;
@@ -588,6 +589,10 @@ td code {
     font-size: 2.15rem
 }
 
+.install-band .code-block {
+    background: var(--paper)
+}
+
 .install-band p {
     font-size: .93rem
 }
@@ -641,7 +646,7 @@ td code {
     right: 8px;
     border: 1px solid var(--line);
     background: var(--paper);
-    color: var(--blue);
+    color: var(--link);
     font-size: .7rem;
     padding: 4px 10px;
     border-radius: 5px;
@@ -818,7 +823,7 @@ td code {
 
 .docs-sidebar a[aria-current=page] {
     background: var(--active);
-    color: var(--blue);
+    color: var(--link);
     font-weight: 650
 }
 
@@ -1119,7 +1124,6 @@ td code {
 
     .agent-setup {
         padding: 24px;
-        box-shadow: 5px 8px 0 var(--sample-shadow);
         margin-right: 5px
     }
 
@@ -1142,7 +1146,6 @@ td code {
     }
 
     .sample {
-        box-shadow: 6px 9px 0 var(--sample-shadow);
         margin-right: 6px
     }
 

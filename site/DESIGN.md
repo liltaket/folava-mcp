@@ -1,42 +1,41 @@
-# Folava site direction
+# Folava MCP site direction
 
-A personal study tool should read like a useful course handout, with the precision
-of a developer reference. The homepage explains the job, demonstrates a synthetic
-student question, and gets someone to a working agent setup. Documentation
-and the operation explorer stay one click away.
+A quiet, useful front door to a personal study tool. The homepage's main job is
+to let someone hand setup to their agent. A copyable prompt and a plain guide
+link come before the manual commands and fictional coursework example.
 
-Light palette: paper #ffffff, fog #f2f5f9, ink #172c41, study blue #2155cd,
-reference green #16725b, separator #d4dfe9. Dark palette: blue paper #142333,
-fog #1c2e41, ink #e5edf5, study blue #a9c4ff, reference green #8ad9bd,
-separator #40556c. Shared semantic tokens cover every surface, text, action,
-selection, focus ring and status message. The installation band keeps its blue
-in both modes. No gradient decoration or stock imagery.
-Type: locally available humanist system sans (Aptos/Segoe UI), comfortably spaced
-body text, strong slightly condensed headings, monospace only for executable code.
+## Visual language
 
-Desktop layout: a left-aligned invitation and an immediately usable setup note.
-The adjacent panel contains a real copyable prompt and a separate plain-text
-guide link, rather than a simulated agent conversation. The blue installation
-band offers manual commands; a quieter section below demonstrates synthetic
-coursework. Mobile stacks in reading order, with an anchor to the setup panel.
-The copy action, original source-sheet example and plain guide all work without
-depending on a live account. The agent guide starts with a demo and treats real
-authentication as a separate private step.
+White #ffffff, soft paper #f5f5f5, graphite #242426, secondary ink #66666b and
+rule #dedee2 form the light palette. Dark uses paper #18181b, panel #232326,
+ink #eeeeef, secondary ink #b1b1b7 and rule #414147. Actions, selection, focus and
+status messages use corresponding neutral tokens. Color does not carry meaning
+alone. Avoid gradients, tinted feature grids and large offset card shadows.
 
-Critique before building: discard the usual simulated chat window with typing
-animation, feature-card grid and inflated statistics. Use a quiet source-sheet
-illustration and immediate install/docs actions. Operation counts come from the
-actual catalog at build time. No private course data or live data connection.
+Type remains a locally available humanist sans (Aptos/Segoe UI), with a generous
+heading scale and readable body measure. Monospace is reserved for commands and
+API examples. The original overlapping-note mark is a small supporting element;
+the project name stays readable beside it. No Folava GUI assets are used.
 
-Theme is a native, labelled System/Light/Dark selector on every page. System is
-the default and follows OS changes; explicit choices persist locally across
-the homepage, guide and catalog. A small local script resolves the choice before
-styles load. If storage is blocked, the selector still works for the current
-page and defaults to the system again on navigation. Without JavaScript, the
-reading surface follows the OS and the unavailable control stays hidden.
+The round, lightly translucent navigation is the main expressive detail. Its
+blur sits over a sufficiently opaque surface; a solid fallback keeps text
+readable when transparency is unavailable. Other sections use open space,
+modest corner radii and quiet rules. The layout stays left-aligned, with the
+actual setup note opposite the introduction and manual setup below.
 
-Motion is restrained: the setup note arrives once with a half-second,
-seven-pixel fade; underlined links respond with a brief underline transition.
-No looping motion, scroll effects or staggered section reveals. Reduced-motion preferences
-disable all authored animation and transitions. Native keyboard behavior,
-visible focus and readable surface contrast take precedence over decoration.
+## Behavior
+
+System/Light/Dark is a native labelled selector on every page. System follows
+OS changes; explicit choices persist locally across routes. A local initializer
+applies the theme before styles load. Blocked storage permits a page-local
+choice, and the no-JavaScript reading surface follows the OS.
+
+Copy controls keep the setup prompt, link and commands available with a manual
+selection fallback. The agent guide starts with a demo, preserves existing host
+configuration and keeps authentication private. Coursework examples are fictional;
+the website never connects to a student account.
+
+Motion responds to actions or gives the setup note one finite, subtle arrival.
+No looping motion, scroll reveals or decorative stagger. Reduced-motion
+preferences disable authored animation and transitions. Clear keyboard focus,
+contrast and responsive reading order are release requirements.

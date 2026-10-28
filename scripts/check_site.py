@@ -17,7 +17,7 @@ ORIGIN = "https://folava.test/folava-mcp/"
 def check_theme(page, expected):
     expect(page.locator("html")).to_have_attribute("data-theme", expected)
     expect(page.locator('meta[name="theme-color"]')).to_have_attribute(
-        "content", "#142333" if expected == "dark" else "#ffffff"
+        "content", "#18181b" if expected == "dark" else "#ffffff"
     )
     # Read the actual surfaces, including nested code, controls and status colors.
     failures = page.evaluate(

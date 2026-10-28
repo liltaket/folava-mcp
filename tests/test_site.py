@@ -63,8 +63,9 @@ def test_site_build_links_and_catalog_match_software(tmp_path, base_path):
         for path in output.rglob("*")
         if path.is_file()
     )
-    assert (output / "install.md").read_text() == (ROOT / "docs/agent-setup.md").read_text()
-    assert BUILD["version_install"]() in (output / "install.md").read_text()
+    guide = (output / "install.md").read_text(encoding="utf-8")
+    assert guide == (ROOT / "docs/agent-setup.md").read_text(encoding="utf-8")
+    assert BUILD["version_install"]() in guide
 
 
 def test_reject_dangerous_site_output_and_base(tmp_path):

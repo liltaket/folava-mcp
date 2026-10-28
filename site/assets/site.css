@@ -28,6 +28,10 @@
     background: var(--paper)
 }
 
+html {
+    scroll-padding-top: 130px
+}
+
 :root[data-theme=dark] {
     color-scheme: dark;
     --paper: #18181b;
@@ -200,7 +204,7 @@ td code {
     position: fixed;
     top: -100px;
     left: 20px;
-    z-index: 10;
+    z-index: 40;
     padding: 12px;
     background: var(--status);
     color: var(--on-status)
@@ -212,15 +216,42 @@ td code {
 }
 
 .site-header {
-    padding-block: 26px;
-    border-bottom: 1px solid var(--line)
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding-block: 16px 0;
+    pointer-events: none
 }
 
 .header-inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 24px
+    gap: 20px;
+    width: min(1060px, calc(100% - 40px));
+    padding: 10px 14px 10px 20px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--paper);
+    box-shadow: 0 4px 24px rgb(0 0 0 / 5%);
+    pointer-events: auto
+}
+
+@supports (backdrop-filter: blur(18px)) or (-webkit-backdrop-filter: blur(18px)) {
+    .header-inner {
+        background: color-mix(in srgb, var(--paper) 92%, transparent);
+        -webkit-backdrop-filter: blur(18px);
+        backdrop-filter: blur(18px)
+    }
+}
+
+@media(prefers-reduced-transparency:reduce), (forced-colors:active) {
+    .header-inner {
+        background: var(--paper);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        box-shadow: none
+    }
 }
 
 .brand {
@@ -229,7 +260,7 @@ td code {
     gap: 10px;
     text-decoration: none;
     color: var(--ink);
-    font-size: 1.42rem;
+    font-size: 1.2rem;
     font-weight: 740;
     letter-spacing: -.04em;
     white-space: nowrap
@@ -251,26 +282,29 @@ td code {
 
 .site-nav {
     display: flex;
-    gap: 30px;
+    gap: 2px;
     align-items: center
 }
 
 .site-nav a {
     font-size: .87rem;
     text-decoration: none;
-    color: var(--muted)
+    color: var(--link);
+    border-radius: 999px;
+    padding: 9px 13px
 }
 
 .site-nav a:hover,
 .site-nav a[aria-current] {
-    color: var(--link)
+    color: var(--ink);
+    background: var(--active)
 }
 
 .header-controls {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 24px
+    gap: 12px
 }
 
 .theme-control {
@@ -285,7 +319,7 @@ td code {
     min-height: 44px;
     padding: 7px 25px 7px 10px;
     border: 1px solid var(--input-line);
-    border-radius: 6px;
+    border-radius: 999px;
     background: var(--paper);
     color: var(--ink);
     cursor: pointer
@@ -1086,30 +1120,47 @@ td code {
     }
 
     .site-header {
-        padding-block: 19px
+        padding-block: 10px 0
     }
 
     .header-inner {
         flex-wrap: wrap;
-        gap: 15px
+        gap: 8px;
+        width: calc(100% - 24px);
+        padding: 12px;
+        border-radius: 26px
     }
 
     .header-controls {
         width: 100%;
         justify-content: space-between;
-        gap: 8px 16px
+        gap: 6px
     }
 
     .site-nav {
-        gap: 20px
+        gap: 0
     }
 
     .site-nav a {
-        font-size: .8rem
+        font-size: .74rem;
+        padding: 9px 7px
     }
 
     .brand {
-        font-size: 1.35rem
+        font-size: 1.15rem
+    }
+
+    .theme-control>span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap
+    }
+
+    html {
+        scroll-padding-top: 155px
     }
 
     .hero {

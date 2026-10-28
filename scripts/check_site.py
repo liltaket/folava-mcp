@@ -22,15 +22,26 @@ def check_theme(page, expected):
     # Read the actual surfaces, including nested code, controls and status colors.
     failures = page.evaluate(
         """() => {
-          const rgb = value => value.match(/[\\d.]+/g).slice(0, 3).map(Number);
-          const luminance = color => rgb(color).map(c => {
+          const canvas = document.createElement('canvas');
+          canvas.width = canvas.height = 1;
+          const context = canvas.getContext('2d', {willReadFrequently: true});
+          const rgba = value => {
+            context.clearRect(0, 0, 1, 1);
+            context.fillStyle = value;
+            context.fillRect(0, 0, 1, 1);
+            const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data;
+            return [r, g, b, a / 255];
+          };
+          const luminance = color => color.slice(0, 3).map(c => {
             c /= 255;
             return c <= .04045 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4;
           }).reduce((sum, c, i) => sum + c * [.2126, .7152, .0722][i], 0);
           const background = element => {
-            const color = getComputedStyle(element).backgroundColor;
-            return color === 'rgba(0, 0, 0, 0)' && element.parentElement
-              ? background(element.parentElement) : color;
+            if (!element) return [255, 255, 255];
+            const [r, g, b, alpha] = rgba(getComputedStyle(element).backgroundColor);
+            const underneath = background(element.parentElement);
+            return [r, g, b].map((channel, i) =>
+              channel * alpha + underneath[i] * (1 - alpha));
           };
           const selectors = ['body', '.muted', '.site-nav a', '.theme-control',
             '.theme-control select', '.primary', '.source-type', '.source-meta',
@@ -40,7 +51,7 @@ def check_theme(page, expected):
           return selectors.flatMap(selector => [...document.querySelectorAll(selector)]
             .filter(element => element.getClientRects().length)
             .flatMap(element => {
-              const a = luminance(getComputedStyle(element).color);
+              const a = luminance(rgba(getComputedStyle(element).color));
               const b = luminance(background(element));
               const ratio = (Math.max(a, b) + .05) / (Math.min(a, b) + .05);
               return ratio < 4.5 ? [`${selector}: ${ratio.toFixed(2)}`] : [];
@@ -220,6 +231,12 @@ def check(site: Path, screenshots: Path | None = None):
             page.get_by_role("combobox", name="Theme").select_option("dark")
             check_theme(page, "dark")
             assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
+        page.goto(ORIGIN + "docs/getting-started/#codex")
+        heading = page.get_by_role("heading", name="Codex", exact=True)
+        expect(heading).to_be_visible()
+        bounds = page.locator(".header-inner").bounding_box()
+        assert bounds["y"] >= 0 and bounds["y"] < 25
+        assert heading.bounding_box()["y"] >= bounds["y"] + bounds["height"]
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
         if screenshots:
             page.screenshot(

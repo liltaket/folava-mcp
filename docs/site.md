@@ -32,7 +32,10 @@ uv run python scripts/check_site.py
 Browser checks use routed static files in Chromium without opening a web server.
 They exercise example tabs and keyboard focus, clipboard success and denied-access
 recovery, catalog search/details/empty results, document navigation and mobile
-layout at 320/390 pixels. Use `--screenshots /your/review/folder` to save bounded
+layout and header touch targets at 320–1440 pixels. Theme checks cover the
+sun/moon button, keyboard and touch activation, persistence across pages and open
+tabs, OS changes before a choice, and blocked storage. Use
+`--screenshots /your/review/folder` to save bounded
 visual-review artifacts outside Git. Static tests also validate every internal
 link and heading target for both project-path and relative-file builds.
 

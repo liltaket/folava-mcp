@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Replaced the theme menu with a sun/moon button. Mobile navigation puts the
+  mark and theme button above a full-width row of links with larger text.
 - Compacted the hero into a short installation row whose copy icon copies the
   complete agent prompt. The full text remains available in a disclosure and
   opens for manual copying if clipboard access fails. Shortened the introduction

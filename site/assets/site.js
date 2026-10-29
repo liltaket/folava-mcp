@@ -1,11 +1,17 @@
 (() => {
-  const themeControl = document.getElementById('theme-choice');
+  const themeControl = document.getElementById('theme-toggle');
   if (themeControl && window.folavaTheme) {
-    const syncTheme = () => { themeControl.value = window.folavaTheme.getPreference(); };
+    const syncTheme = () => {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      const label = `Switch to ${next} theme`;
+      themeControl.setAttribute('aria-label', label);
+      themeControl.title = label;
+    };
     syncTheme();
-    themeControl.closest('.theme-control').hidden = false;
-    themeControl.addEventListener('change', () => {
-      window.folavaTheme.setPreference(themeControl.value);
+    themeControl.hidden = false;
+    themeControl.addEventListener('click', () => {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      window.folavaTheme.setPreference(next);
     });
     window.addEventListener('themechange', syncTheme);
   }

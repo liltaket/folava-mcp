@@ -27,10 +27,13 @@ actual setup note opposite the introduction and manual setup below.
 
 ## Behavior
 
-System/Light/Dark is a native labelled selector on every page. System follows
-OS changes; explicit choices persist locally across routes. A local initializer
-applies the theme before styles load. Blocked storage permits a page-local
-choice, and the no-JavaScript reading surface follows the OS.
+One unboxed sun/moon button switches between light and dark on every page. Its
+icon and accessible action name show the destination theme. It follows OS changes
+until the visitor makes a choice; that choice persists locally across routes.
+A local initializer applies the theme before styles load. Blocked storage permits
+a page-local choice, and the no-JavaScript reading surface follows the OS.
+On mobile, the mark and theme button share the first navigation row; the three
+links fill the second row with generous touch targets.
 
 Copy controls keep the setup prompt, link and commands available with a manual
 selection fallback. The agent guide starts with a demo, preserves existing host

@@ -19,6 +19,11 @@ def check_theme(page, expected):
     expect(page.locator('meta[name="theme-color"]')).to_have_attribute(
         "content", "#18181b" if expected == "dark" else "#ffffff"
     )
+    destination = "light" if expected == "dark" else "dark"
+    toggle = page.get_by_role("button", name=f"Switch to {destination} theme", exact=True)
+    expect(toggle).to_be_visible()
+    expect(toggle.locator(".theme-sun" if expected == "dark" else ".theme-moon")).to_be_visible()
+    expect(toggle.locator(".theme-moon" if expected == "dark" else ".theme-sun")).to_be_hidden()
     # Read the actual surfaces, including nested code, controls and status colors.
     failures = page.evaluate(
         """() => {
@@ -43,8 +48,8 @@ def check_theme(page, expected):
             return [r, g, b].map((channel, i) =>
               channel * alpha + underneath[i] * (1 - alpha));
           };
-          const selectors = ['body', '.muted', '.site-nav a', '.theme-control',
-            '.theme-control select', '.primary', '.source-type', '.source-meta',
+          const selectors = ['body', '.muted', '.site-nav a', '.theme-toggle',
+            '.primary', '.source-type', '.source-meta',
             '.install-band', '.install-band .small', '.code-block', '.copy-button',
             '.operation summary span', '.docs-sidebar a', 'input', '.copy-status',
             '.agent-setup', '.setup-prompt', '.icon-copy', '.clear-search',
@@ -60,6 +65,31 @@ def check_theme(page, expected):
         }"""
     )
     assert not failures, failures
+
+
+def set_theme(page, theme):
+    if page.locator("html").get_attribute("data-theme") != theme:
+        page.get_by_role("button", name=f"Switch to {theme} theme", exact=True).click()
+    check_theme(page, theme)
+
+
+def check_header(page):
+    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
+    targets = page.locator(".brand, .site-nav a, .theme-toggle")
+    boxes = []
+    for target in targets.all():
+        expect(target).to_be_visible()
+        box = target.bounding_box()
+        assert box["width"] >= 44 and box["height"] >= 44, box
+        assert box["x"] >= 0 and box["x"] + box["width"] <= page.viewport_size["width"], box
+        for previous in boxes:
+            assert (
+                box["x"] >= previous["x"] + previous["width"] - 1
+                or previous["x"] >= box["x"] + box["width"] - 1
+                or box["y"] >= previous["y"] + previous["height"] - 1
+                or previous["y"] >= box["y"] + box["height"] - 1
+            ), (box, previous)
+        boxes.append(box)
 
 
 def check(site: Path, screenshots: Path | None = None):
@@ -100,35 +130,43 @@ def check(site: Path, screenshots: Path | None = None):
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(ORIGIN)
         expect(page.get_by_role("heading", level=1)).to_have_text("Your agent,meet Canvas.")
-        theme = page.get_by_role("combobox", name="Theme")
-        expect(theme).to_have_value("system")
+        theme = page.locator("#theme-toggle")
+        expect(page.get_by_role("combobox")).to_have_count(0)
         check_theme(page, "light")
         page.emulate_media(color_scheme="dark")
         check_theme(page, "dark")
-        theme.select_option("light")
+        theme.click()
         page.emulate_media(color_scheme="light")
         page.emulate_media(color_scheme="dark")
         check_theme(page, "light")
-        theme.select_option("dark")
+        theme.click()
         page.goto(ORIGIN + "catalog/")
         check_theme(page, "dark")
-        expect(page.get_by_role("combobox", name="Theme")).to_have_value("dark")
         page.goto(ORIGIN + "docs/getting-started/")
         check_theme(page, "dark")
         page.goto(ORIGIN)
         assert page.evaluate("window.themeAtInit") == {"theme": "dark", "body": False}
-        # Native select behavior remains usable without a pointer.
+        # Both native button keys work, with visible focus and an accurate action name.
         theme.focus()
-        theme.press("Home")
-        expect(theme).to_have_value("system")
-        theme.press("ArrowDown")
-        expect(theme).to_have_value("light")
+        theme.press("Space")
         check_theme(page, "light")
         assert theme.evaluate("element => getComputedStyle(element).outlineStyle") == "solid"
-        theme.select_option("system")
-        page.goto(ORIGIN)
-        expect(theme).to_have_value("system")
+        theme.press("Enter")
+        check_theme(page, "dark")
+        # Real storage events keep another open tab's icon and action in sync.
+        other = context.new_page()
+        other.goto(ORIGIN + "catalog/")
+        theme.click()
+        check_theme(other, "light")
+        other.get_by_role("button", name="Switch to dark theme").click()
+        check_theme(page, "dark")
+        # Clearing the saved choice restores OS-following behavior in the other tab.
+        other.evaluate("localStorage.removeItem('folava-theme')")
+        page.wait_for_function("window.folavaTheme.getPreference() === 'system'")
         page.emulate_media(color_scheme="light")
+        check_theme(page, "light")
+        other.close()
+        page.goto(ORIGIN)
         check_theme(page, "light")
         # Proper roving tab state and keyboard focus, including wrapping.
         feedback = page.get_by_role("tab", name="Feedback")
@@ -161,9 +199,9 @@ def check(site: Path, screenshots: Path | None = None):
         page.get_by_role("button", name="Copy installation command").click()
         expect(page.get_by_role("status")).to_have_text("Command copied.")
         check_theme(page, "light")
-        theme.select_option("dark")
+        theme.click()
         check_theme(page, "dark")
-        theme.select_option("light")
+        theme.click()
         assert "uv tool install https://github.com/liltaket/folava-mcp/releases/" in page.evaluate(
             "window.copied"
         )
@@ -191,17 +229,17 @@ def check(site: Path, screenshots: Path | None = None):
             page.screenshot(
                 path=str(screenshots / "home-desktop.png"), full_page=True, animations="disabled"
             )
-        for width in (390, 320):
+        for width in (320, 360, 390, 430, 700, 701, 768, 1024, 1440):
             page.set_viewport_size({"width": width, "height": 900})
-            assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
+            check_header(page)
             assert page.locator(".setup-command code").evaluate(
                 "el => el.getBoundingClientRect().height <= "
                 "parseFloat(getComputedStyle(el).lineHeight) + 1"
             )
             expect(theme).to_be_visible()
-            theme.select_option("dark")
+            theme.click()
             check_theme(page, "dark")
-            theme.select_option("light")
+            theme.click()
         if screenshots:
             page.set_viewport_size({"width": 390, "height": 900})
             page.reload()
@@ -219,9 +257,9 @@ def check(site: Path, screenshots: Path | None = None):
         page.locator("[data-operation]:visible").first.locator("summary").click()
         expect(page.locator("details[open]")).to_contain_text('"operation"')
         check_theme(page, "light")
-        theme.select_option("dark")
+        theme.click()
         check_theme(page, "dark")
-        theme.select_option("light")
+        theme.click()
         search.fill("an-operation-that-does-not-exist")
         expect(page.locator("#empty-search")).to_be_visible()
         page.get_by_role("button", name="Clear search", exact=True).click()
@@ -231,7 +269,9 @@ def check(site: Path, screenshots: Path | None = None):
         search.press("Escape")
         expect(search).to_have_value("")
         assert page.locator("[data-operation]:visible").count() == total
-        assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
+        for width in (320, 390, 768, 1440):
+            page.set_viewport_size({"width": width, "height": 900})
+            check_header(page)
         page.goto(ORIGIN + "docs/getting-started/")
         check_theme(page, "light")
         expect(page.get_by_role("heading", name="Getting started", exact=True)).to_be_visible()
@@ -244,11 +284,10 @@ def check(site: Path, screenshots: Path | None = None):
                 "link", name="Guide", exact=True
             )
         ).to_have_attribute("aria-current", "location")
-        for width in (1440, 390, 320):
+        for width in (1440, 768, 390, 320):
             page.set_viewport_size({"width": width, "height": 900})
-            page.get_by_role("combobox", name="Theme").select_option("dark")
-            check_theme(page, "dark")
-            assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
+            set_theme(page, "dark")
+            check_header(page)
         page.goto(ORIGIN + "docs/getting-started/")
         page.get_by_role("link", name="Codex", exact=True).click()
         assert page.url.endswith("#codex")
@@ -269,10 +308,11 @@ def check(site: Path, screenshots: Path | None = None):
             expect(page.get_by_role("link", name="Skip to content")).to_be_focused()
             page.keyboard.press("Enter")
             assert page.evaluate("document.activeElement.id") == "main"
-            page.get_by_role("combobox", name="Theme").focus()
-            page.keyboard.press("Home")
-            page.keyboard.press("End")
-            expect(page.get_by_role("combobox", name="Theme")).to_have_value("dark")
+            theme.focus()
+            page.keyboard.press("Space")
+            check_theme(page, "light")
+            page.keyboard.press("Enter")
+            check_theme(page, "dark")
         page.goto(ORIGIN)
         page.emulate_media(reduced_motion="reduce")
         assert (
@@ -344,7 +384,12 @@ def check(site: Path, screenshots: Path | None = None):
                 animations="disabled",
             )
         # Mock browsers that block storage: initial OS theme and the control still work.
-        blocked = browser.new_context(color_scheme="dark", viewport={"width": 320, "height": 900})
+        blocked = browser.new_context(
+            color_scheme="dark",
+            viewport={"width": 320, "height": 900},
+            is_mobile=True,
+            has_touch=True,
+        )
         blocked.route(ORIGIN + "**", serve)
         blocked.add_init_script("""Object.defineProperty(window, 'localStorage', {
           get() { throw new DOMException('Storage is blocked', 'SecurityError'); }
@@ -354,11 +399,10 @@ def check(site: Path, screenshots: Path | None = None):
         blocked_page.goto(ORIGIN)
         check_theme(blocked_page, "dark")
         assert blocked_page.evaluate("window.themeAtInit") == {"theme": "dark", "body": False}
-        blocked_page.get_by_role("combobox", name="Theme").select_option("light")
+        blocked_page.get_by_role("button", name="Switch to light theme").tap()
         check_theme(blocked_page, "light")
         blocked_page.reload()
         check_theme(blocked_page, "dark")
-        blocked_page.get_by_role("combobox", name="Theme").select_option("system")
         blocked_page.emulate_media(color_scheme="light")
         check_theme(blocked_page, "light")
         blocked.close()
@@ -368,7 +412,7 @@ def check(site: Path, screenshots: Path | None = None):
         no_script_page = no_script.new_page()
         no_script_page.goto(ORIGIN)
         expect(no_script_page.get_by_role("heading", level=1)).to_be_visible()
-        expect(no_script_page.locator(".theme-control")).to_be_hidden()
+        expect(no_script_page.locator(".theme-toggle")).to_be_hidden()
         no_script_page.get_by_text("View full prompt", exact=True).click()
         expect(no_script_page.locator("#setup-prompt")).to_be_visible()
         assert (
@@ -389,7 +433,8 @@ def check(site: Path, screenshots: Path | None = None):
         browser.close()
     print(
         "Browser checks passed: tabs/keyboard, clipboard success/failure, "
-        "catalog, docs, 320/390px layout, themes/persistence/system changes, "
+        "catalog, docs, 320–1440px layout/touch targets, sun/moon toggle/keyboard/touch, "
+        "theme persistence/system changes/cross-tab sync, "
         "pre-paint initialization, blocked storage, no-JS fallback, contrast, reduced motion."
     )
 

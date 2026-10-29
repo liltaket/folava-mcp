@@ -27,6 +27,11 @@ readable when transparency is unavailable. Other sections use open space,
 modest corner radii and quiet rules. The layout stays left-aligned, with the
 actual setup note opposite the introduction and manual setup below.
 
+On phones, the hero becomes a narrow reading column with a fluid two-line
+headline. Its spacing brings the copyable setup command closer to the introduction;
+the setup note uses smaller type and padding while retaining 44px touch controls.
+The pencil mark keeps the same proportion to Canvas as the heading scales.
+
 The reference pages use the same type, surfaces and navigation. Guides have a
 grouped reading rail, section links and previous/next pages. The API catalog has
 its own resource rail, operation IDs and expandable request examples. The two

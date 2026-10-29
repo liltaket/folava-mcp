@@ -1309,27 +1309,73 @@ td code {
     }
 
     .hero {
+        width: min(480px, calc(100% - 40px));
         grid-template-columns: 1fr;
-        gap: 40px;
-        padding-block: 45px 60px
+        gap: 28px;
+        padding-block: 32px 44px
     }
 
     .hero h1 {
-        font-size: 3.15rem
+        font-size: clamp(2.5rem, 13vw, 3.75rem);
+        line-height: 1.06;
+        letter-spacing: -.045em;
+        margin: 0
     }
 
-    .agent-setup {
-        padding: 24px;
+    .hero .lead {
+        max-width: 34ch;
+        font-size: 1.0625rem;
+        margin: 18px 0 0
+    }
+
+    .hero .actions {
+        gap: 24px;
+        margin: 22px 0 14px
+    }
+
+    .hero .actions .text-link {
+        display: inline-flex;
+        align-items: center;
+        min-height: 48px
+    }
+
+    .hero-copy > .small {
+        margin: 0
+    }
+
+    .hero .agent-setup {
+        padding: 20px;
+        border-radius: 16px
+    }
+
+    .hero .agent-setup h2 {
+        font-size: 1.25rem;
+        margin-bottom: 8px
+    }
+
+    .hero .agent-setup > p:not(.setup-note) {
+        margin: 0;
+        line-height: 1.5
+    }
+
+    .hero .setup-command {
+        margin: 16px 0 4px
+    }
+
+    .hero .prompt-details summary {
+        min-height: 44px;
+        padding-block: 12px
+    }
+
+    .hero .setup-note {
+        margin-top: 8px;
+        line-height: 1.5
     }
 
     .example-workspace {
         grid-template-columns: 1fr;
         gap: 28px;
         padding-block: 50px 56px
-    }
-
-    .hero-copy>p {
-        max-width: 50ch
     }
 
     .lead {

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Refined the mobile hero with a fluid two-line heading, a narrower reading
+  column and a more compact setup note that brings the copy action into view sooner.
 - Collapsed mobile navigation into a hamburger disclosure while keeping search
   and theme controls visible. Added keyboard dismissal, focus handling, responsive
   state reset and a script-free link fallback.

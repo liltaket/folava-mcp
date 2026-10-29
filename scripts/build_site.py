@@ -106,7 +106,7 @@ def frame(title: str, content: str, base: str, *, route: str, active: str = "") 
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{ESC(title)} · Folava MCP</title>
-<meta name="description" content="Read-only Canvas LMS access for your agents. Install Folava MCP, explore the tools, and connect your own environment.">
+<meta name="description" content="Canvas courses, deadlines and feedback for your agent. Folava MCP is an independent open-source development preview.">
 <meta name="theme-color" content="#ffffff"><meta name="color-scheme" content="light dark">
 <link rel="canonical" href="{canonical}"><link rel="icon" href="{asset_url(base, "favicon.svg")}" type="image/svg+xml">
 <script src="{asset_url(base, "theme.js")}"></script><link rel="stylesheet" href="{asset_url(base, "site.css")}"><script defer src="{asset_url(base, "site.js")}"></script>
@@ -200,7 +200,7 @@ def document_page(slug: str, base: str) -> str:
         f'<div class="wrap docs-layout"><aside class="docs-sidebar" aria-label="Documentation">'
         f'<p>Documentation</p><nav aria-label="Documentation sections"><ul>{"".join(links)}</ul></nav></aside>'
         f'<article class="prose">{content}<p class="edit-link">'
-        f'<a href="{REPO}/blob/main/{filename}">View this document on GitHub</a></p></article></div>'
+        f'<a href="{REPO}/blob/main/{filename}">View source on GitHub</a></p></article></div>'
     )
 
 
@@ -229,14 +229,13 @@ def catalog_page(base: str) -> str:
         rows.append(f'''<details class="operation" id="op-{ESC(op["id"])}" data-operation data-search="{ESC(search)}">
 <summary><div><strong>{ESC(op["id"])}</strong><span>{ESC(op["description"])}</span></div></summary>
 <div class="operation-body"><p><code>GET {ESC(op["path"])}</code></p>
-<p><strong>Path arguments:</strong> {ESC(required)}</p><p><strong>Query keys:</strong> {ESC(keys)}</p>
+<p><strong>Path parameters:</strong> {ESC(required)}</p><p><strong>Query parameters:</strong> {ESC(keys)}</p>
 <p>Common pagination: <code>page</code>, <code>per_page</code>, <code>bookmark</code>, <code>cursor</code>.
-Permissions and token scopes still apply. <a href="{ESC(op["docs"])}">Official endpoint documentation</a></p>
+Permissions and token scopes still apply. <a href="{ESC(op["docs"])}">Canvas endpoint documentation</a></p>
 <div class="code-block"><pre><code>{code}</code></pre><button class="copy-button" data-copy hidden aria-label="Copy {ESC(op["id"])} example">Copy</button></div></div></details>''')
-    return f'''<section class="wrap catalog-intro"><h1>The read catalog</h1><p>Find a resource, inspect its arguments, then call <code>canvas_read</code>.
-These {len(operations)} operation IDs come directly from the software’s reviewed registry, including workflow aliases.</p>
-<p class="catalog-guide">Use <code>canvas_discover</code> from your agent for the same catalog.
-Unknown methods, routes and query keys are rejected. <a href="{base}docs/tools/">Read the tool guide</a>.</p>
+    return f'''<section class="wrap catalog-intro"><h1>API catalog</h1><p>Find an operation and its arguments, then call <code>canvas_read</code>.</p>
+<p class="catalog-guide">Your agent can browse the same catalog with <code>canvas_discover</code>.
+<a href="{base}docs/tools/">Tool guide</a>.</p>
 <div id="catalog-controls" class="catalog-controls" hidden><div class="search-field"><label class="search-label" for="operation-search">Search operations<input id="operation-search" type="search" placeholder="Try submission, file, calendar…" autocomplete="off" spellcheck="false"></label><button id="clear-search" class="clear-search" type="button" hidden>Clear search</button></div>
 <p id="operation-count" class="catalog-count" aria-live="polite">{len(operations)} of {len(operations)} operations</p></div></section>
 <p id="catalog-fallback" class="wrap catalog-guide">All operations are shown. Use your browser’s Find command to search this page.</p>

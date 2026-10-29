@@ -27,6 +27,14 @@ readable when transparency is unavailable. Other sections use open space,
 modest corner radii and quiet rules. The layout stays left-aligned, with the
 actual setup note opposite the introduction and manual setup below.
 
+## Copy
+
+Use short, concrete headings and name the action a control performs. Let the
+fictional course example show the use cases rather than repeating them in a
+benefits section. Keep implementation details in the guides, with concise data
+handling, access limits and development-preview status visible on the homepage.
+Reviewed reads do not imply that Canvas leaves all remote state unchanged.
+
 ## Behavior
 
 One unboxed sun/moon button switches between light and dark on every page. Its

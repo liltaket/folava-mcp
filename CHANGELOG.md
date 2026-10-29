@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Shortened homepage and catalog copy, clarified that the copy icon supplies the
+  full setup prompt, and removed a repeated benefits section. Kept access and
+  data-handling limits visible without promising unchanged Canvas account state.
 - Refined the selected pencil hero: one curved lilac stroke, a detailed pencil
   that lifts and rests, and a matching quiet button tint. Replaced the card-edge
   animation; reduced-motion readers receive the complete static mark.

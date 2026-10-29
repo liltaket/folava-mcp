@@ -557,7 +557,7 @@ td code {
     grid-template-columns: 1fr 1.1fr;
     align-items: center;
     gap: 85px;
-    padding-block: 90px 12px
+    padding-block: 90px 80px
 }
 
 .primary {
@@ -601,12 +601,6 @@ td code {
     margin: 0;
     font-size: .92rem;
     font-weight: 600
-}
-
-.sample-heading .small {
-    font-size: .75rem;
-    font-weight: 400;
-    margin-top: 2px
 }
 
 .sample-symbol {
@@ -808,37 +802,8 @@ td code {
     background: var(--active)
 }
 
-.workflows {
-    display: grid;
-    grid-template-columns: 1fr 1.1fr;
-    gap: 100px;
-    padding-block: 94px
-}
-
 .section-intro p {
     color: var(--muted)
-}
-
-.workflow-list article {
-    margin-bottom: 28px;
-    padding-bottom: 26px;
-    border-bottom: 1px solid var(--line)
-}
-
-.workflow-list article:last-child {
-    border: 0;
-    padding-bottom: 0;
-    margin-bottom: 0
-}
-
-.workflow-list p {
-    font-size: .94rem;
-    color: var(--muted);
-    margin-bottom: 8px
-}
-
-.workflow-list a {
-    font-size: .86rem
 }
 
 .boundary {
@@ -1249,10 +1214,6 @@ td code {
         gap: 40px
     }
 
-    .workflows {
-        gap: 45px
-    }
-
     .docs-layout {
         gap: 35px;
         grid-template-columns: 185px minmax(0, 1fr)
@@ -1336,7 +1297,7 @@ td code {
     .example-workspace {
         grid-template-columns: 1fr;
         gap: 28px;
-        padding-block: 50px 0
+        padding-block: 50px 56px
     }
 
     .hero-copy>p {
@@ -1370,12 +1331,6 @@ td code {
 
     .install-commands {
         min-width: 0
-    }
-
-    .workflows {
-        grid-template-columns: 1fr;
-        gap: 35px;
-        padding-block: 50px
     }
 
     .boundary {

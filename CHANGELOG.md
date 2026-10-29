@@ -2,12 +2,15 @@
 
 ## Unreleased
 
+- Refined the selected pencil hero: one curved lilac stroke, a detailed pencil
+  that lifts and rests, and a matching quiet button tint. Replaced the card-edge
+  animation; reduced-motion readers receive the complete static mark.
 - Replaced the theme menu with a sun/moon button. Mobile navigation puts the
   mark and theme button above a full-width row of links with larger text.
 - Compacted the hero into a short installation row whose copy icon copies the
   complete agent prompt. The full text remains available in a disclosure and
   opens for manual copying if clipboard access fails. Shortened the introduction
-  and theme control; added one finite hero trace respecting reduced motion.
+  and theme control.
 - Added an original note-sheet mark and neutral light/dark branding, with round
   translucent navigation and a solid reduced-transparency fallback.
 - Kept copy labels stable and improved selection feedback when clipboard access

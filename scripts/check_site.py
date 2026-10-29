@@ -236,6 +236,8 @@ def check(site: Path, screenshots: Path | None = None):
                 "el => el.getBoundingClientRect().height <= "
                 "parseFloat(getComputedStyle(el).lineHeight) + 1"
             )
+            artwork = page.locator(".hero-annotation").bounding_box()
+            assert artwork["x"] >= 0 and artwork["x"] + artwork["width"] <= width + 1
             expect(theme).to_be_visible()
             theme.click()
             check_theme(page, "dark")
@@ -315,12 +317,20 @@ def check(site: Path, screenshots: Path | None = None):
             check_theme(page, "dark")
         page.goto(ORIGIN)
         page.emulate_media(reduced_motion="reduce")
-        assert (
-            page.locator(".hero-signal rect").evaluate(
-                "element => getComputedStyle(element).animationName"
+        for selector in (".hero-ink", ".hero-pencil"):
+            assert (
+                page.locator(selector).evaluate(
+                    "element => getComputedStyle(element).animationName"
+                )
+                == "none"
             )
-            == "none"
+        assert (
+            page.locator(".hero-ink").evaluate(
+                "element => getComputedStyle(element).strokeDashoffset"
+            )
+            == "0px"
         )
+        expect(page.locator(".hero-annotation")).to_have_attribute("aria-hidden", "true")
         assert (
             page.locator(".agent-setup").evaluate(
                 "element => getComputedStyle(element).animationName"
@@ -335,29 +345,40 @@ def check(site: Path, screenshots: Path | None = None):
         )
         page.emulate_media(reduced_motion="no-preference")
         page.reload()
-        assert (
-            page.locator(".hero-signal rect").evaluate(
-                "element => getComputedStyle(element).animationIterationCount"
+        for selector in (".hero-ink", ".hero-pencil"):
+            assert (
+                page.locator(selector).evaluate(
+                    "element => getComputedStyle(element).animationIterationCount"
+                )
+                == "1"
             )
-            == "1"
-        )
-        assert (
-            page.locator(".hero-signal rect").evaluate(
-                "element => getComputedStyle(element).animationDuration"
+            assert (
+                page.locator(selector).evaluate(
+                    "element => getComputedStyle(element).animationDuration"
+                )
+                == "3.8s"
             )
-            == "4.6s"
-        )
-        trace = page.locator(".hero-signal").evaluate(
+        stroke = page.locator(".hero-annotation").evaluate(
             """element => {
               const animations = element.getAnimations({subtree: true});
-              animations.forEach(animation => { animation.currentTime = 2300; });
-              const style = getComputedStyle(element.querySelector('rect'));
-              const middle = parseFloat(style.strokeDashoffset);
-              animations.forEach(animation => { animation.currentTime = 5000; });
-              return {middle, finishedOpacity: getComputedStyle(element).opacity};
+              const ink = element.querySelector('.hero-ink');
+              const pencil = element.querySelector('.hero-pencil');
+              animations.forEach(animation => { animation.currentTime = 0; });
+              const start = parseFloat(getComputedStyle(ink).strokeDashoffset);
+              animations.forEach(animation => { animation.currentTime = 1900; });
+              const middle = parseFloat(getComputedStyle(ink).strokeDashoffset);
+              const moving = new DOMMatrix(getComputedStyle(pencil).transform);
+              animations.forEach(animation => { animation.currentTime = 3800; });
+              const resting = new DOMMatrix(getComputedStyle(pencil).transform);
+              return {start, middle, movingX: moving.e,
+                end: parseFloat(getComputedStyle(ink).strokeDashoffset),
+                restingX: resting.e, restingY: resting.f,
+                restingOpacity: getComputedStyle(pencil).opacity};
             }"""
         )
-        assert 0 < trace["middle"] < 1000 and trace["finishedOpacity"] == "0"
+        assert stroke["start"] == 100 and 0 < stroke["middle"] < 100 and stroke["end"] == 0
+        assert 10 < stroke["movingX"] < stroke["restingX"] == 270
+        assert stroke["restingY"] == 41 and stroke["restingOpacity"] == "1"
         assert (
             page.locator(".agent-setup").evaluate(
                 "element => getComputedStyle(element).animationIterationCount"

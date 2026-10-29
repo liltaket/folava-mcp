@@ -368,11 +368,64 @@ td code {
 }
 
 .hero {
+    --hero-accent: #a38aca;
     display: grid;
     grid-template-columns: 1fr 1.05fr;
     gap: 60px;
     align-items: center;
     padding-block: 88px 100px
+}
+
+.hero-word {
+    position: relative;
+    display: inline-block;
+    isolation: isolate
+}
+
+.hero-annotation {
+    position: absolute;
+    left: -5%;
+    bottom: -.22em;
+    width: 110%;
+    height: .8em;
+    overflow: visible;
+    pointer-events: none;
+    z-index: -1;
+    color: var(--hero-accent)
+}
+
+.hero-ink {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 12;
+    stroke-linecap: round;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 0;
+    opacity: .4
+}
+
+.hero-pencil {
+    fill: currentColor;
+    stroke: currentColor;
+    stroke-width: 1.2;
+    stroke-linejoin: round;
+    transform: translate(270px, 41px) rotate(-38deg)
+}
+
+.pencil-tip,
+.pencil-eraser {
+    fill: var(--paper)
+}
+
+.pencil-detail {
+    fill: none;
+    stroke: var(--paper);
+    opacity: .65
+}
+
+.pencil-lead {
+    fill: var(--ink);
+    stroke: none
 }
 
 .lead {
@@ -499,24 +552,6 @@ td code {
     font-size: .78rem
 }
 
-.hero-signal {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-    pointer-events: none;
-    opacity: 0
-}
-
-.hero-signal rect {
-    fill: none;
-    stroke: var(--muted);
-    stroke-width: 1.5;
-    stroke-dasharray: 55 945;
-    vector-effect: non-scaling-stroke
-}
-
 .example-workspace {
     display: grid;
     grid-template-columns: 1fr 1.1fr;
@@ -532,6 +567,14 @@ td code {
 
 .primary:hover {
     background: var(--action-hover)
+}
+
+.hero .primary {
+    background: color-mix(in srgb, var(--hero-accent) 24%, var(--action))
+}
+
+.hero .primary:hover {
+    background: color-mix(in srgb, var(--hero-accent) 32%, var(--action-hover))
 }
 
 .text-link {
@@ -1447,22 +1490,26 @@ td code {
         animation: sample-arrive .5s ease-out both
     }
 
-    .hero-signal {
-        animation: signal-presence 4.6s ease-out both
+    .hero-ink {
+        animation: pencil-ink 3.8s linear both
     }
 
-    .hero-signal rect {
-        animation: signal-travel 4.6s cubic-bezier(.2,.45,.5,1) both
+    .hero-pencil {
+        animation: pencil-write 3.8s linear both
     }
 
-    @keyframes signal-presence {
-        0%, 100% { opacity: 0 }
-        12%, 75% { opacity: .55 }
+    @keyframes pencil-ink {
+        0%, 10% { stroke-dashoffset: 100 }
+        86%, 100% { stroke-dashoffset: 0 }
     }
 
-    @keyframes signal-travel {
-        from { stroke-dashoffset: 1000 }
-        to { stroke-dashoffset: 0 }
+    @keyframes pencil-write {
+        0% { opacity: 0; transform: translate(10px, 44px) rotate(-46deg) }
+        10% { opacity: 1; transform: translate(10px, 51px) rotate(-44deg) }
+        35% { transform: translate(96px, 47px) rotate(-41deg) }
+        65% { transform: translate(198px, 46px) rotate(-44deg) }
+        86% { transform: translate(270px, 49px) rotate(-40deg) }
+        100% { opacity: 1; transform: translate(270px, 41px) rotate(-38deg) }
     }
 
     @keyframes sample-arrive {
@@ -1487,7 +1534,7 @@ td code {
     .docs-sidebar,
     .copy-button,
     .icon-copy,
-    .hero-signal,
+    .hero-annotation,
     .copy-status {
         display: none !important
     }

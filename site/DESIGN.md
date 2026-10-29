@@ -12,7 +12,9 @@ White #ffffff, soft paper #f5f5f5, graphite #242426, secondary ink #66666b and
 rule #dedee2 form the light palette. Dark uses paper #18181b, panel #232326,
 ink #eeeeef, secondary ink #b1b1b7 and rule #414147. Actions, selection, focus and
 status messages use corresponding neutral tokens. Color does not carry meaning
-alone. Avoid gradients, tinted feature grids and large offset card shadows.
+alone. A muted lilac #a38aca is reserved for the hero's pencil mark and a small
+tint in its main action. Avoid gradients, tinted feature grids and large offset
+card shadows.
 
 Type remains a locally available humanist sans (Aptos/Segoe UI), with a generous
 heading scale and readable body measure. Monospace is reserved for commands and
@@ -40,9 +42,11 @@ selection fallback. The agent guide starts with a demo, preserves existing host
 configuration and keeps authentication private. Coursework examples are fictional;
 the website never connects to a student account.
 
-Motion gives the setup note one finite, subtle arrival and traces one thin
-neutral segment around its edge for 4.6 seconds. No looping motion, scroll
-reveals or decorative stagger. Colour variants remain local design prototypes
-until a choice is made. Reduced-motion
-preferences disable authored animation and transitions. Clear keyboard focus,
-contrast and responsive reading order are release requirements.
+The selected pencil study adds a small school reference without adding hero copy.
+A detailed pencil draws one softly curved lilac line beneath Canvas, then lifts
+its tip and rests. The 3.8-second stroke replaces the former card-edge trace;
+the setup note keeps its subtle arrival. No looping motion, scroll reveals or
+decorative stagger. Reduced-motion views retain a complete static mark; the
+artwork also works without scripts. Clear keyboard focus, contrast and responsive
+reading order are release requirements. The bookmark and paper-plane studies were
+discarded after the pencil direction was selected.

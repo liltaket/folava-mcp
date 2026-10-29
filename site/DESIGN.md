@@ -27,6 +27,12 @@ readable when transparency is unavailable. Other sections use open space,
 modest corner radii and quiet rules. The layout stays left-aligned, with the
 actual setup note opposite the introduction and manual setup below.
 
+The reference pages use the same type, surfaces and navigation. Guides have a
+grouped reading rail, section links and previous/next pages. The API catalog has
+its own resource rail, operation IDs and expandable request examples. The two
+areas stay distinct in navigation and search results. On smaller screens the
+rails and page contents collapse into native disclosures above the article.
+
 ## Copy
 
 Use short, concrete headings and name the action a control performs. Let the
@@ -44,6 +50,12 @@ A local initializer applies the theme before styles load. Blocked storage permit
 a page-local choice, and the no-JavaScript reading surface follows the OS.
 On mobile, the mark and theme button share the first navigation row; the three
 links fill the second row with generous touch targets.
+
+The search button and Cmd+K/Ctrl+K open one native modal on every page. Guide
+headings and API operations share a versioned static index, with visible type
+labels in the results. Keyboard selection, focus restoration, loading, empty and
+retry states belong to the same flow. Queries remain in memory in the browser;
+the only search request fetches the public index without query terms.
 
 Copy controls keep the setup prompt, link and commands available with a manual
 selection fallback. The agent guide starts with a demo, preserves existing host

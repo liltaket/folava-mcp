@@ -79,6 +79,12 @@
     });
   });
   const search = document.getElementById('operation-search');
+  document.querySelectorAll('[data-responsive-details]').forEach(details => {
+    const compact = window.matchMedia(`(max-width: ${details.dataset.responsiveDetails}px)`);
+    const sync = () => { details.open = !compact.matches; };
+    sync();
+    compact.addEventListener('change', sync);
+  });
   if (search) {
     document.getElementById('catalog-controls').hidden = false;
     document.getElementById('catalog-fallback').hidden = true;
@@ -93,6 +99,16 @@
         const matches = words.every(word => operation.dataset.search.includes(word));
         operation.hidden = !matches;
         if (matches) visible += 1;
+      });
+      document.querySelectorAll('[data-operation-group]').forEach(group => {
+        const matches = [...group.querySelectorAll('[data-operation]')].filter(item => !item.hidden).length;
+        group.hidden = matches === 0;
+        const key = group.dataset.operationGroup;
+        const link = document.querySelector(`[data-catalog-link="${key}"]`);
+        if (link) link.hidden = matches === 0;
+        document.querySelectorAll(`[data-group-count="${key}"]`).forEach(count => {
+          count.textContent = matches;
+        });
       });
       count.textContent = `${visible} of ${operations.length} operations`;
       empty.hidden = visible > 0;

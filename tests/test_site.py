@@ -1,8 +1,9 @@
+import hashlib
 import json
 import runpy
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
 
 import pytest
 
@@ -15,9 +16,11 @@ class Links(HTMLParser):
         super().__init__()
         self.links = []
         self.ids = []
+        self.elements = []
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
+        self.elements.append((tag, attrs))
         if attrs.get("id"):
             self.ids.append(attrs["id"])
         if tag in ("a", "link") and attrs.get("href"):
@@ -58,6 +61,91 @@ def test_site_build_links_and_catalog_match_software(tmp_path, base_path):
             assert target.exists(), (page, link)
             if url.fragment and target in pages:
                 assert unquote(url.fragment) in pages[target].ids, (page, link)
+
+    operations = json.loads((output / "operations.json").read_text(encoding="utf-8"))
+    search_indexes = set()
+    for page, parsed in pages.items():
+        search_elements = [attrs for _, attrs in parsed.elements if attrs.get("data-search-index")]
+        assert len(search_elements) == 1, page
+        search_element = search_elements[0]
+        assert "data-search-base" in search_element
+        index_url = urlsplit(search_element["data-search-index"])
+        assert index_url.path.endswith("/search-index.json")
+        version = parse_qs(index_url.query).get("v", [""])[0]
+        assert len(version) >= 8 and all(char in "0123456789abcdef" for char in version), page
+        if index_url.scheme or index_url.netloc:
+            pytest.fail((page, search_element["data-search-index"]))
+        if index_url.path.startswith("/"):
+            assert not base_path or index_url.path.startswith(base_path)
+            index_path = (
+                index_url.path[len(base_path) :] if base_path else index_url.path.lstrip("/")
+            )
+            index_file = output / unquote(index_path)
+        else:
+            index_file = (page.parent / unquote(index_url.path)).resolve()
+        assert index_file.exists(), (page, search_element["data-search-index"])
+        assert version == hashlib.sha256(index_file.read_bytes()).hexdigest()[:12], page
+        search_indexes.add(index_file)
+
+        base_url = urlsplit(search_element.get("data-search-base", ""))
+        assert not base_url.scheme and not base_url.netloc, (page, base_url)
+        if base_url.path.startswith("/"):
+            assert not base_path or base_url.path.startswith(base_path)
+            base_root = output / (
+                base_url.path[len(base_path) :] if base_path else base_url.path.lstrip("/")
+            )
+        else:
+            base_root = (page.parent / unquote(base_url.path)).resolve()
+        assert base_root.resolve() == output.resolve(), (page, base_url.path, base_root)
+
+    assert len(search_indexes) == 1
+    search_index = json.loads(next(iter(search_indexes)).read_text(encoding="utf-8"))
+    assert search_index["version"] == 1
+    entries = search_index["entries"]
+    required_entry_fields = {"title", "kind", "context", "url", "text"}
+    assert entries and all(required_entry_fields <= entry.keys() for entry in entries)
+    assert all(entry["kind"] in {"guide", "api"} for entry in entries)
+
+    guide_urls = set()
+    api_operation_ids = set()
+    for entry in entries:
+        result_url = urlsplit(entry["url"])
+        assert not result_url.scheme and not result_url.netloc
+        assert not result_url.path.startswith("/")
+        assert all(part != ".." for part in result_url.path.split("/"))
+        result_path = unquote(result_url.path)
+        target = (output / result_path).resolve() if result_path else output / "index.html"
+        if target.is_dir():
+            target /= "index.html"
+        assert target.exists(), entry["url"]
+        if result_url.fragment:
+            rendered_page = target if target.is_file() else target / "index.html"
+            parsed_target = pages.get(rendered_page)
+            assert (
+                parsed_target is not None and unquote(result_url.fragment) in parsed_target.ids
+            ), entry["url"]
+        if entry["kind"] == "guide":
+            guide_urls.add((result_url.path.rstrip("/"), result_url.fragment))
+        else:
+            assert result_url.path.rstrip("/") == "catalog"
+            assert result_url.fragment.startswith("op-")
+            api_operation_ids.add(result_url.fragment.removeprefix("op-"))
+
+    assert api_operation_ids == {operation["id"] for operation in operations}
+    for page in output.glob("docs/*/index.html"):
+        slug = page.parent.name
+        rendered = pages[page]
+        for tag, attrs in rendered.elements:
+            if tag == "h1":
+                assert any(path == f"docs/{slug}" for path, _ in guide_urls), page
+            elif tag in {"h2", "h3"}:
+                assert (f"docs/{slug}", attrs["id"]) in guide_urls, (page, attrs.get("id"))
+
+    catalog = pages[output / "catalog/index.html"]
+    assert any(attrs.get("data-operation-group") is not None for _, attrs in catalog.elements)
+    assert any(
+        tag == "nav" and attrs.get("aria-label") == "API groups" for tag, attrs in catalog.elements
+    )
     assert all(
         path.suffix not in (".sqlite", ".py", ".md") or path == output / "install.md"
         for path in output.rglob("*")

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added site-wide Cmd+K/Ctrl+K search for guide sections and API operations using
+  a versioned public index and local ranking, with keyboard navigation and retry.
+- Gave guides and the API catalog a shared reference layout with distinct grouped
+  navigation, page contents, adjacent guides and expandable operation examples.
 - Shortened homepage and catalog copy, clarified that the copy icon supplies the
   full setup prompt, and removed a repeated benefits section. Kept access and
   data-handling limits visible without promising unchanged Canvas account state.

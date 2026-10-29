@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import mimetypes
+import re
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
@@ -75,7 +76,7 @@ def set_theme(page, theme):
 
 def check_header(page):
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
-    targets = page.locator(".brand, .site-nav a, .theme-toggle")
+    targets = page.locator(".brand, .site-nav a, #site-search-open, .theme-toggle")
     boxes = []
     for target in targets.all():
         expect(target).to_be_visible()
@@ -90,6 +91,38 @@ def check_header(page):
                 or previous["y"] >= box["y"] + box["height"] - 1
             ), (box, previous)
         boxes.append(box)
+
+
+def check_search_shell(page):
+    trigger = page.get_by_role("button", name="Search guides and API", exact=True)
+    expect(trigger).to_be_visible()
+    expect(trigger.locator("svg")).to_be_visible()
+    assert "K" in trigger.inner_text().upper()
+    expect(trigger).to_have_attribute("aria-keyshortcuts", "Meta+K Control+K")
+    expect(page.locator("#site-search")).to_have_js_property("open", False)
+    search_input = page.locator("#site-search-input")
+    expect(search_input).to_have_attribute("type", "search")
+    expect(page.locator("#site-search-results")).to_have_attribute("role", "listbox")
+    expect(page.locator("#site-search-results")).to_have_js_property("tagName", "UL")
+    expect(page.locator("#site-search-state")).to_have_attribute("role", "status")
+    expect(page.locator("#site-search-close")).to_have_attribute("aria-label", "Close search")
+    return trigger, search_input
+
+
+def open_search(page, *, shortcut=None):
+    trigger = page.get_by_role("button", name="Search guides and API", exact=True)
+    if shortcut:
+        page.keyboard.press(shortcut)
+    else:
+        trigger.click()
+    expect(page.locator("#site-search")).to_be_visible()
+    search_input = page.get_by_role("combobox", name="Search guides and API", exact=True)
+    expect(search_input).to_be_focused()
+    return search_input
+
+
+def search_options(page):
+    return page.locator('#site-search-results a[role="option"]')
 
 
 def check(site: Path, screenshots: Path | None = None):
@@ -127,6 +160,15 @@ def check(site: Path, screenshots: Path | None = None):
 
         context.route(ORIGIN + "**", serve)
         page = context.new_page()
+        search_index_requests = []
+        page.on(
+            "request",
+            lambda request: (
+                search_index_requests.append(page.url)
+                if urlsplit(request.url).path.endswith("/search-index.json")
+                else None
+            ),
+        )
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(ORIGIN)
         expect(page.get_by_role("heading", level=1)).to_have_text("Your agent,meet Canvas.")
@@ -183,7 +225,7 @@ def check(site: Path, screenshots: Path | None = None):
             "() => {navigator.clipboard.writeText = async text => {window.copied = text};}"
         )
         page.get_by_role("button", name="Copy setup prompt").click()
-        expect(page.get_by_role("status")).to_have_text("Setup prompt copied.")
+        expect(page.locator("#copy-status")).to_have_text("Setup prompt copied.")
         expect(page.get_by_role("button", name="Copy setup prompt")).to_have_accessible_name(
             "Copy setup prompt"
         )
@@ -197,7 +239,7 @@ def check(site: Path, screenshots: Path | None = None):
             "href", "/folava-mcp/install.md"
         )
         page.get_by_role("button", name="Copy installation command").click()
-        expect(page.get_by_role("status")).to_have_text("Command copied.")
+        expect(page.locator("#copy-status")).to_have_text("Command copied.")
         check_theme(page, "light")
         theme.click()
         check_theme(page, "dark")
@@ -213,12 +255,12 @@ def check(site: Path, screenshots: Path | None = None):
             "() => {navigator.clipboard.writeText = async () => {throw new Error('denied')};}"
         )
         page.get_by_role("button", name="Copy setup prompt").click()
-        expect(page.get_by_role("status")).to_contain_text("copy it manually")
+        expect(page.locator("#copy-status")).to_contain_text("copy it manually")
         expect(page.locator(".prompt-details")).to_have_attribute("open", "")
         expect(page.locator("#setup-prompt")).to_be_visible()
         assert page.evaluate("window.getSelection().toString()") == prompt
         page.get_by_role("button", name="Copy demo connection command").click()
-        expect(page.get_by_role("status")).to_contain_text("copy it manually")
+        expect(page.locator("#copy-status")).to_contain_text("copy it manually")
         assert (
             page.evaluate("window.getSelection().toString()")
             == "codex mcp add canvas-demo -- folava-mcp serve --demo"
@@ -248,35 +290,181 @@ def check(site: Path, screenshots: Path | None = None):
             page.screenshot(
                 path=str(screenshots / "home-mobile.png"), full_page=True, animations="disabled"
             )
-        page.goto(ORIGIN + "catalog/")
+
+        # Search from the homepage, then follow a guide result into the docs.
+        page.set_viewport_size({"width": 1440, "height": 900})
+        search_index_requests.clear()
+        trigger, _ = check_search_shell(page)
+        search_input = open_search(page)
+        page.keyboard.press("Tab")
+        expect(page.get_by_role("button", name="Close search", exact=True)).to_be_focused()
+        page.keyboard.press("Tab")
+        expect(search_input).to_be_focused()
+        page.keyboard.press("Escape")
+        expect(page.locator("#site-search")).to_be_hidden()
+        expect(trigger).to_be_focused()
+        search_input = open_search(page, shortcut="Control+k")
+        home_url = page.url
+        stored_state = page.evaluate(
+            """() => ({local: Object.entries(localStorage).sort(),
+                       session: Object.entries(sessionStorage).sort()})"""
+        )
+        search_input.fill("Getting started")
+        guide_result = page.locator(
+            '#site-search-results a[role="option"][href*="docs/getting-started/"]'
+        )
+        expect(guide_result).to_be_visible()
+        expect(guide_result).to_have_class(re.compile(r"\bsearch-result\b"))
+        expect(guide_result.locator(".search-result-kind")).to_have_text("Guide")
+        expect(guide_result.locator(".search-result-context")).to_be_visible()
+        assert page.url == home_url
+        assert (
+            page.evaluate(
+                """() => ({local: Object.entries(localStorage).sort(),
+                       session: Object.entries(sessionStorage).sort()})"""
+            )
+            == stored_state
+        )
+        guide_result.click()
+        expect(page.get_by_role("heading", name="Getting started", exact=True)).to_be_visible()
+        assert sum(urlsplit(url).path == "/folava-mcp/" for url in search_index_requests) == 1
+
+        # Ctrl+K works from a guide, and exact operation selection survives arrow wrapping.
+        search_input = open_search(page, shortcut="Control+k")
+        search_input.fill("profile")
+        options = search_options(page)
+        expect(options.first).to_be_visible()
+        assert options.count() > 1
+        page.keyboard.press("ArrowUp")
+        expect(options.last).to_have_attribute("aria-selected", "true")
+        page.keyboard.press("ArrowDown")
+        selected = page.locator('#site-search-results a[role="option"][aria-selected="true"]')
+        expect(selected).to_have_count(1)
+        selected_url = urlsplit(selected.get_attribute("href"))
+        assert selected_url.path.endswith("/catalog/")
+        assert selected_url.fragment == "op-profile"
+        expect(selected.locator(".search-result-kind")).to_have_text("API")
+        page.keyboard.press("Enter")
+        expect(page.locator("#op-profile")).to_have_attribute("open", "")
+        assert page.url.endswith("#op-profile")
+        assert (
+            sum(
+                urlsplit(url).path == "/folava-mcp/docs/getting-started/"
+                for url in search_index_requests
+            )
+            == 1
+        )
+
         check_theme(page, "light")
         operations = page.locator("[data-operation]")
         total = operations.count()
         assert total == len(json.loads((site / "operations.json").read_text())) > 0
-        search = page.get_by_role("searchbox", name="Search operations")
+        groups = page.locator("[data-operation-group]")
+        group_total = groups.count()
+        assert group_total > 1
+        search = page.get_by_role("searchbox", name="Filter operations")
         search.fill("submission")
-        assert 1 < page.locator("[data-operation]:visible").count() < total
-        page.locator("[data-operation]:visible").first.locator("summary").click()
-        expect(page.locator("details[open]")).to_contain_text('"operation"')
+        visible_operation_count = page.locator("[data-operation]:visible").count()
+        assert 1 < visible_operation_count < total
+        expect(page.locator("#operation-count")).to_have_text(
+            f"{visible_operation_count} of {total} operations"
+        )
+        visible_groups = page.locator("[data-operation-group]:visible")
+        assert 0 < visible_groups.count() < group_total
+        for group in visible_groups.all():
+            matching_operations = group.locator("[data-operation]:visible").count()
+            assert matching_operations > 0
+            key = group.get_attribute("data-operation-group")
+            expect(page.locator(f'[data-group-count="{key}"]').first).to_have_text(
+                str(matching_operations)
+            )
+        assert all(
+            group.locator("[data-operation]:visible").count() == 0
+            for group in page.locator("[data-operation-group][hidden]").all()
+        )
+        first_visible_operation = page.locator("[data-operation]:visible").first
+        first_visible_operation.locator("summary").click()
+        expect(first_visible_operation).to_have_attribute("open", "")
+        expect(first_visible_operation).to_contain_text('"operation"')
         check_theme(page, "light")
         theme.click()
         check_theme(page, "dark")
         theme.click()
         search.fill("an-operation-that-does-not-exist")
         expect(page.locator("#empty-search")).to_be_visible()
+        expect(page.locator("#operation-count")).to_have_text(f"0 of {total} operations")
         page.get_by_role("button", name="Clear search", exact=True).click()
         expect(search).to_be_focused()
         expect(page.locator("#empty-search")).to_be_hidden()
+        expect(page.locator("#operation-count")).to_have_text(f"{total} of {total} operations")
         search.fill("submission")
         search.press("Escape")
         expect(search).to_have_value("")
         assert page.locator("[data-operation]:visible").count() == total
+        search.fill("submission")
+        # The document shortcut is handled even when the local filter owns focus.
+        search.press("Meta+k")
+        expect(page.locator("#site-search")).to_be_visible()
+        search_input = page.get_by_role("combobox", name="Search guides and API", exact=True)
+        expect(search_input).to_be_focused()
+        search_input.fill("assignments")
+        assignment_result = page.locator(
+            '#site-search-results a[role="option"][href*="#op-assignments"]'
+        )
+        expect(assignment_result).to_be_visible()
+        options = search_options(page)
+        assert options.count() > 1
+        page.keyboard.press("ArrowUp")
+        expect(options.last).to_have_attribute("aria-selected", "true")
+        page.keyboard.press("ArrowDown")
+        selected = page.locator('#site-search-results a[role="option"][aria-selected="true"]')
+        expect(selected).to_have_count(1)
+        assert urlsplit(selected.get_attribute("href")).fragment == "op-assignments"
+        page.keyboard.press("Enter")
+        assert page.url.endswith("#op-assignments")
+        expect(page.locator("#op-assignments")).to_have_attribute("open", "")
+        expect(page.locator("#op-assignments")).to_be_in_viewport()
+        expect(search).to_have_value("")
+        assert page.locator("[data-operation]:visible").count() == total
+        assert (
+            sum(urlsplit(url).path == "/folava-mcp/catalog/" for url in search_index_requests) == 1
+        )
+
+        # Queries stay in the dialog, and an empty search gives an accessible status.
+        page.get_by_role("button", name="Search guides and API", exact=True).click()
+        search_input = page.get_by_role("combobox", name="Search guides and API", exact=True)
+        page_url = page.url
+        stored_state = page.evaluate(
+            """() => ({local: Object.entries(localStorage).sort(),
+                       session: Object.entries(sessionStorage).sort()})"""
+        )
+        search_input.fill("no-such-guide-or-operation-zzq")
+        expect(search_options(page)).to_have_count(0)
+        expect(page.locator("#site-search-state")).to_contain_text("No results")
+        assert page.url == page_url
+        assert (
+            page.evaluate(
+                """() => ({local: Object.entries(localStorage).sort(),
+                       session: Object.entries(sessionStorage).sort()})"""
+            )
+            == stored_state
+        )
+        page.get_by_role("button", name="Close search", exact=True).click()
+        expect(page.locator("#site-search")).to_be_hidden()
         for width in (320, 390, 768, 1440):
             page.set_viewport_size({"width": width, "height": 900})
             check_header(page)
         page.goto(ORIGIN + "docs/getting-started/")
         check_theme(page, "light")
         expect(page.get_by_role("heading", name="Getting started", exact=True)).to_be_visible()
+        expect(page.locator("#reference-navigation")).to_have_attribute("open", "")
+        expect(page.locator("#page-navigation")).to_have_attribute("open", "")
+        page.set_viewport_size({"width": 390, "height": 900})
+        expect(page.locator("#reference-navigation")).not_to_have_attribute("open", "")
+        expect(page.locator("#page-navigation")).not_to_have_attribute("open", "")
+        expect(page.locator("#reference-navigation summary")).to_have_text("Browse guides")
+        page.locator("#reference-navigation summary").click()
+        expect(page.locator("#reference-navigation")).to_have_attribute("open", "")
         page.get_by_role("navigation", name="Documentation sections").get_by_role(
             "link", name="Authentication", exact=True
         ).click()
@@ -286,12 +474,25 @@ def check(site: Path, screenshots: Path | None = None):
                 "link", name="Guide", exact=True
             )
         ).to_have_attribute("aria-current", "location")
-        for width in (1440, 768, 390, 320):
+        for width in (1440, 1024, 900, 768, 390, 320):
             page.set_viewport_size({"width": width, "height": 900})
+            reference_navigation = page.locator("#reference-navigation")
+            page_navigation = page.locator("#page-navigation")
+            if width > 900:
+                expect(reference_navigation).to_have_attribute("open", "")
+            else:
+                expect(reference_navigation).not_to_have_attribute("open", "")
+            if width > 1200:
+                expect(page_navigation).to_have_attribute("open", "")
+            else:
+                expect(page_navigation).not_to_have_attribute("open", "")
             set_theme(page, "dark")
             check_header(page)
+        page.set_viewport_size({"width": 1440, "height": 900})
         page.goto(ORIGIN + "docs/getting-started/")
-        page.get_by_role("link", name="Codex", exact=True).click()
+        page.get_by_role("navigation", name="On this page", exact=True).get_by_role(
+            "link", name="Codex", exact=True
+        ).click()
         assert page.url.endswith("#codex")
         heading = page.get_by_role("heading", name="Codex", exact=True)
         expect(heading).to_be_visible()
@@ -427,6 +628,56 @@ def check(site: Path, screenshots: Path | None = None):
         blocked_page.emulate_media(color_scheme="light")
         check_theme(blocked_page, "light")
         blocked.close()
+        # Hold the first index fetch to observe loading, then mock a failure and retry.
+        retry_context = browser.new_context()
+        retry_context.route(ORIGIN + "**", serve)
+        retry_context.add_init_script(
+            """(() => {
+              const nativeFetch = window.fetch.bind(window);
+              let held = false;
+              window.fetch = (input, init) => {
+                if (!held && String(input).includes('search-index.json')) {
+                  held = true;
+                  return new Promise((resolve, reject) => {
+                    window.releaseSearchIndex = () =>
+                      nativeFetch(input, init).then(resolve, reject);
+                  });
+                }
+                return nativeFetch(input, init);
+              };
+            })();"""
+        )
+        retry_attempts = {"index": 0}
+
+        def fail_first_search_index(route):
+            retry_attempts["index"] += 1
+            if retry_attempts["index"] == 1:
+                route.fulfill(
+                    status=503,
+                    content_type="application/json",
+                    body='{"error":"temporary outage"}',
+                )
+            else:
+                route.fulfill(
+                    content_type="application/json",
+                    body=(site / "search-index.json").read_text(encoding="utf-8"),
+                )
+
+        retry_context.route(re.compile(r"/search-index\.json(?:\?|$)"), fail_first_search_index)
+        retry_page = retry_context.new_page()
+        retry_page.on("pageerror", lambda error: errors.append(str(error)))
+        retry_page.goto(ORIGIN)
+        check_search_shell(retry_page)
+        open_search(retry_page)
+        expect(retry_page.locator("#site-search-state")).to_contain_text("Loading")
+        retry_page.evaluate("window.releaseSearchIndex()")
+        expect(retry_page.locator("#site-search-state")).to_contain_text("could not load")
+        retry_button = retry_page.get_by_role("button", name="Retry search", exact=True)
+        expect(retry_button).to_be_visible()
+        retry_button.click()
+        expect(search_options(retry_page).first).to_be_visible()
+        assert retry_attempts["index"] == 2
+        retry_context.close()
         # CSS alone gives a usable reading surface when scripting is unavailable.
         no_script = browser.new_context(java_script_enabled=False, color_scheme="dark")
         no_script.route(ORIGIN + "**", serve)
@@ -434,6 +685,7 @@ def check(site: Path, screenshots: Path | None = None):
         no_script_page.goto(ORIGIN)
         expect(no_script_page.get_by_role("heading", level=1)).to_be_visible()
         expect(no_script_page.locator(".theme-toggle")).to_be_hidden()
+        expect(no_script_page.locator("#site-search-open")).to_be_hidden()
         no_script_page.get_by_text("View full prompt", exact=True).click()
         expect(no_script_page.locator("#setup-prompt")).to_be_visible()
         assert (
@@ -443,18 +695,19 @@ def check(site: Path, screenshots: Path | None = None):
             == "dark"
         )
         no_script_page.goto(ORIGIN + "catalog/")
-        expect(no_script_page.get_by_role("searchbox", name="Search operations")).to_be_hidden()
+        expect(no_script_page.get_by_role("searchbox", name="Filter operations")).to_be_hidden()
         expect(no_script_page.get_by_text("All operations are shown.", exact=False)).to_be_visible()
         no_script_page.locator("[data-operation]").first.locator("summary").click()
-        expect(no_script_page.locator("details[open]")).to_be_visible()
+        expect(no_script_page.locator("[data-operation][open]")).to_be_visible()
         no_script.close()
         page.keyboard.press("Tab")
         assert page.locator("main#main").count() == 1
         assert not errors, errors
         browser.close()
     print(
-        "Browser checks passed: tabs/keyboard, clipboard success/failure, "
-        "catalog, docs, 320–1440px layout/touch targets, sun/moon toggle/keyboard/touch, "
+        "Browser checks passed: tabs/keyboard, global search/load/retry, "
+        "clipboard success/failure, catalog/groups, docs/navigation, "
+        "320–1440px layout/touch targets, sun/moon toggle/keyboard/touch, "
         "theme persistence/system changes/cross-tab sync, "
         "pre-paint initialization, blocked storage, no-JS fallback, contrast, reduced motion."
     )

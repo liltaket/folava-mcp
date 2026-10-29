@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added a ChatGPT guide for private MCP tunnel setup, a synthetic first call,
+  separate Canvas authentication and local desktop settings. Linked it from
+  setup and included it in site navigation/search; ChatGPT verification remains pending.
 - Added site-wide Cmd+K/Ctrl+K search for guide sections and API operations using
   a versioned public index and local ranking, with keyboard navigation and retry.
 - Gave guides and the API catalog a shared reference layout with distinct grouped

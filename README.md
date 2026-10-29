@@ -22,6 +22,10 @@ or find a course attachment—without giving an agent the ability to submit work
 The [agent setup guide](docs/agent-setup.md) covers installation, existing MCP
 configuration, demo checks and the separate account connection.
 
+**Want it in ChatGPT?** The [ChatGPT guide](docs/chatgpt.md) covers a private
+tunnel for the web chat and local desktop settings. The end-to-end ChatGPT
+connection remains unverified.
+
 ```text
 You       What do I need for the fieldwork seminar?
 Agent     Reads the course outline, assignment and attached field guide.

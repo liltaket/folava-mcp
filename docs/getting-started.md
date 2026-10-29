@@ -8,6 +8,10 @@ your existing MCP configuration and connect the synthetic demo. Your account
 connection happens separately, with credentials kept outside the conversation.
 The homepage has a ready-to-copy prompt; the manual steps are below.
 
+For a ChatGPT conversation, follow [Use Folava in ChatGPT](chatgpt.md).
+The web guide uses a private tunnel to this local process; it does not require
+publishing your Canvas connection as a public server.
+
 You need Python 3.11 or newer and an MCP host that can launch a stdio command.
 [uv](https://docs.astral.sh/uv/getting-started/installation/) manages an isolated
 tool installation on Linux, macOS and Windows. No Node runtime is required.

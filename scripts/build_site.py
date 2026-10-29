@@ -25,6 +25,7 @@ SITE = "https://liltaket.github.io/folava-mcp/"
 DOCUMENTS = {
     "getting-started": ("Get started", "docs/getting-started.md"),
     "agent-setup": ("Set up with your agent", "docs/agent-setup.md"),
+    "chatgpt": ("Use in ChatGPT", "docs/chatgpt.md"),
     "authentication": ("Authentication", "docs/authentication.md"),
     "tools": ("Tools and files", "docs/tools.md"),
     "events": ("Change feed", "docs/events.md"),
@@ -40,7 +41,7 @@ DOCUMENTS = {
     "changelog": ("Changelog", "CHANGELOG.md"),
 }
 DOCUMENT_GROUPS = (
-    ("Start here", ("getting-started", "agent-setup", "authentication")),
+    ("Start here", ("getting-started", "agent-setup", "chatgpt", "authentication")),
     ("Using Folava", ("tools", "events", "privacy", "security", "release-readiness")),
     (
         "Project",

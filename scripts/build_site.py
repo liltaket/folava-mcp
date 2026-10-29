@@ -272,12 +272,12 @@ def frame(
 <script src="{asset_url(base, "theme.js")}"></script><link rel="stylesheet" href="{asset_url(base, "site.css")}"><link rel="stylesheet" href="{asset_url(base, "reference.css")}"><script defer src="{asset_url(base, "site.js")}"></script><script defer src="{asset_url(base, "search.js")}"></script>
 </head><body><a class="skip-link" href="#main">Skip to content</a>
 <header class="site-header"><div class="wrap header-inner"><a class="brand" href="{base}" aria-label="Folava MCP home">{brand_mark()}folava <span>MCP</span></a>
-<div class="header-controls"><nav class="site-nav" aria-label="Main navigation">{nav("Guide", "docs/getting-started/", "docs")}{nav("API catalog", "catalog/", "catalog")}<a href="{REPO}">GitHub</a></nav>
+<div class="header-controls"><nav id="site-navigation" class="site-nav" aria-label="Main navigation">{nav("Guide", "docs/getting-started/", "docs")}{nav("API catalog", "catalog/", "catalog")}<a href="{REPO}">GitHub</a></nav>
 <button id="site-search-open" class="search-trigger" type="button" aria-label="Search guides and API" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K" data-search-index="{base}search-index.json?v={search_version}" data-search-base="{base}" hidden>{search_icon()}<span class="search-trigger-label">Search…</span><kbd data-search-shortcut>Ctrl K</kbd></button>
 <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark theme" title="Switch to dark theme" hidden>
 <svg class="theme-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.5 13.2A8.7 8.7 0 0 1 10.8 3.5a8.7 8.7 0 1 0 9.7 9.7Z"/></svg>
 <svg class="theme-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-</button></div></div></header>
+</button><button id="site-menu-toggle" class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-navigation" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="menu-line-top" d="M5 8h14"/><path class="menu-line-bottom" d="M5 16h14"/></svg></button></div></div></header>
 <main id="main" tabindex="-1">{content}</main>
 <footer class="site-footer"><div class="wrap footer-inner"><p>Folava MCP · Independent open source · Apache-2.0</p><div class="footer-links"><a href="{base}docs/security/">Security</a><a href="{REPO}/releases">Releases</a><a href="{REPO}/issues">Issues</a></div></div></footer>
 <div id="copy-status" class="copy-status" role="status" aria-live="polite"></div>

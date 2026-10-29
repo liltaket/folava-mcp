@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Collapsed mobile navigation into a hamburger disclosure while keeping search
+  and theme controls visible. Added keyboard dismissal, focus handling, responsive
+  state reset and a script-free link fallback.
 - Added a ChatGPT guide for private MCP tunnel setup, a synthetic first call,
   separate Canvas authentication and local desktop settings. Linked it from
   setup and included it in site navigation/search; ChatGPT verification remains pending.

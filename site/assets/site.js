@@ -1,4 +1,55 @@
 (() => {
+  const menuToggle = document.getElementById('site-menu-toggle');
+  const navigation = document.getElementById('site-navigation');
+  const header = document.querySelector('.header-inner');
+  if (menuToggle && navigation && header) {
+    const controls = menuToggle.parentElement;
+    const compact = window.matchMedia('(max-width: 700px)');
+    let menuOpen = false;
+    const setMenuOpen = (open, returnFocus = false) => {
+      menuOpen = compact.matches && open;
+      navigation.hidden = compact.matches && !menuOpen;
+      menuToggle.setAttribute('aria-expanded', String(menuOpen));
+      menuToggle.setAttribute('aria-label', menuOpen ? 'Close menu' : 'Open menu');
+      header.classList.toggle('menu-open', menuOpen);
+      if (returnFocus) menuToggle.focus();
+    };
+    const syncMenu = () => {
+      const focused = document.activeElement;
+      const focusInNav = navigation.contains(focused);
+      // Match keyboard and reading order to the visible layout at each breakpoint.
+      if (compact.matches) controls.append(navigation);
+      else controls.prepend(navigation);
+      menuToggle.hidden = !compact.matches;
+      setMenuOpen(false);
+      if (compact.matches && focusInNav) menuToggle.focus();
+      else if (!compact.matches && focused === menuToggle) navigation.querySelector('a')?.focus();
+      else if (!compact.matches && focusInNav) focused.focus();
+    };
+    syncMenu();
+    compact.addEventListener('change', syncMenu);
+    menuToggle.addEventListener('click', () => setMenuOpen(!menuOpen));
+    navigation.addEventListener('click', event => {
+      if (menuOpen && event.target.closest('a')) setMenuOpen(false, true);
+    });
+    document.addEventListener('click', event => {
+      if (menuOpen && !header.contains(event.target)) setMenuOpen(false);
+    });
+    header.addEventListener('focusout', event => {
+      if (menuOpen && event.relatedTarget && !header.contains(event.relatedTarget)) setMenuOpen(false);
+    });
+    document.getElementById('site-search-open')?.addEventListener('click', () => setMenuOpen(false));
+    document.addEventListener('keydown', event => {
+      if (!menuOpen) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setMenuOpen(false, true);
+      } else if (!event.altKey && !event.shiftKey && !event.isComposing
+          && (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        setMenuOpen(false, navigation.contains(document.activeElement));
+      }
+    });
+  }
   const themeControl = document.getElementById('theme-toggle');
   if (themeControl && window.folavaTheme) {
     const syncTheme = () => {

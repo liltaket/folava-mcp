@@ -444,10 +444,7 @@ html:has(.search-dialog[open]) { overflow: hidden; scrollbar-gutter: stable; }
     .page-toc a { min-height: 44px; display: flex; align-items: center; padding-block: 9px; }
 }
 @media (max-width: 700px) {
-    .header-inner { grid-template-columns: minmax(0, 1fr) auto auto; gap: 4px 6px; }
-    .brand { min-width: 0; gap: 8px; }
     .search-trigger { grid-column: 2; grid-row: 1; }
-    .theme-toggle { grid-column: 3; grid-row: 1; }
     .reference-layout { width: calc(100% - 36px); padding-top: 26px; }
     .reference-sidebar { margin-bottom: 18px; }
     .reference-layout .prose h1, .reference-layout .catalog-intro h1 { font-size: 2.15rem; }

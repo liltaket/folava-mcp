@@ -48,8 +48,11 @@ icon and accessible action name show the destination theme. It follows OS change
 until the visitor makes a choice; that choice persists locally across routes.
 A local initializer applies the theme before styles load. Blocked storage permits
 a page-local choice, and the no-JavaScript reading surface follows the OS.
-On mobile, the mark and theme button share the first navigation row; the three
-links fill the second row with generous touch targets.
+On mobile, the mark, search, theme and hamburger share one compact row. The
+hamburger reveals the navigation links inside the same rounded surface. Escape,
+link selection, outside clicks and leaving the header by keyboard close it;
+Escape returns focus to the toggle. Link order follows the expanded layout.
+Without JavaScript the navigation links remain available.
 
 The search button and Cmd+K/Ctrl+K open one native modal on every page. Guide
 headings and API operations share a versioned static index, with visible type

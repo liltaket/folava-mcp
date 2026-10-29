@@ -49,7 +49,7 @@ def check_theme(page, expected):
             return [r, g, b].map((channel, i) =>
               channel * alpha + underneath[i] * (1 - alpha));
           };
-          const selectors = ['body', '.muted', '.site-nav a', '.theme-toggle',
+          const selectors = ['body', '.muted', '.site-nav a', '.theme-toggle', '.menu-toggle',
             '.primary', '.source-type', '.source-meta',
             '.install-band', '.install-band .small', '.code-block', '.copy-button',
             '.operation summary span', '.docs-sidebar a', 'input', '.copy-status',
@@ -76,7 +76,21 @@ def set_theme(page, theme):
 
 def check_header(page):
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
-    targets = page.locator(".brand, .site-nav a, #site-search-open, .theme-toggle")
+    toggle = page.locator("#site-menu-toggle")
+    navigation = page.get_by_role("navigation", name="Main navigation", include_hidden=True)
+    if page.viewport_size["width"] <= 700:
+        expect(toggle).to_be_visible()
+        if toggle.get_attribute("aria-expanded") == "true":
+            expect(navigation).to_be_visible()
+        else:
+            expect(navigation).to_be_hidden()
+    else:
+        expect(toggle).to_be_hidden()
+        expect(navigation).to_be_visible()
+    targets = page.locator(
+        ".brand:visible, .site-nav a:visible, #site-search-open:visible, "
+        ".theme-toggle:visible, .menu-toggle:visible"
+    )
     boxes = []
     for target in targets.all():
         expect(target).to_be_visible()
@@ -91,6 +105,74 @@ def check_header(page):
                 or previous["y"] >= box["y"] + box["height"] - 1
             ), (box, previous)
         boxes.append(box)
+
+
+def check_mobile_menu(page):
+    page.set_viewport_size({"width": 390, "height": 900})
+    toggle = page.locator("#site-menu-toggle")
+    navigation = page.locator("#site-navigation")
+    links = navigation.get_by_role("link")
+    expect(toggle).to_have_attribute("aria-controls", "site-navigation")
+    expect(toggle).to_have_attribute("aria-expanded", "false")
+    expect(navigation).to_be_hidden()
+    toggle.focus()
+    page.keyboard.press("Enter")
+    expect(toggle).to_have_accessible_name("Close menu")
+    expect(toggle).to_have_attribute("aria-expanded", "true")
+    expect(links).to_have_count(3)
+    check_header(page)
+    page.keyboard.press("Tab")
+    expect(links.first).to_be_focused()
+    page.keyboard.press("Shift+Tab")
+    expect(toggle).to_be_focused()
+    page.keyboard.press("Tab")
+    page.keyboard.press("Escape")
+    expect(toggle).to_be_focused()
+    expect(toggle).to_have_accessible_name("Open menu")
+    expect(navigation).to_be_hidden()
+    page.keyboard.press("Space")
+    expect(navigation).to_be_visible()
+    page.get_by_role("heading", level=1).click()
+    expect(navigation).to_be_hidden()
+    toggle.click()
+    toggle.click()
+    expect(navigation).to_be_hidden()
+    toggle.click()
+    links.last.focus()
+    page.keyboard.press("Tab")
+    expect(navigation).to_be_hidden()
+    expect(page.get_by_role("link", name="Agent setup", exact=True)).to_be_focused()
+
+    # Search remains accessible, and its modal never leaves the menu open behind it.
+    for shortcut in (None, "Control+k", "Meta+k"):
+        toggle.click()
+        if shortcut:
+            links.first.focus()
+            page.keyboard.press(shortcut)
+        else:
+            page.get_by_role("button", name="Search guides and API", exact=True).click()
+        expect(page.locator("#site-search")).to_be_visible()
+        expect(navigation).to_be_hidden()
+        page.keyboard.press("Escape")
+        expect(page.locator("#site-search")).to_be_hidden()
+        if shortcut:
+            expect(toggle).to_be_focused()
+
+    # A breakpoint change restores full navigation and leaves focus on a usable control.
+    toggle.click()
+    page.set_viewport_size({"width": 701, "height": 900})
+    expect(toggle).to_be_hidden()
+    expect(links.first).to_be_focused()
+    check_header(page)
+    page.set_viewport_size({"width": 700, "height": 900})
+    expect(toggle).to_be_focused()
+    expect(navigation).to_be_hidden()
+    toggle.click()
+    links.nth(1).click()
+    expect(page).to_have_url(ORIGIN + "catalog/")
+    expect(page.locator("#site-menu-toggle")).to_have_attribute("aria-expanded", "false")
+    expect(page.locator("#site-navigation")).to_be_hidden()
+    page.goto(ORIGIN)
 
 
 def check_search_shell(page):
@@ -290,6 +372,7 @@ def check(site: Path, screenshots: Path | None = None):
             page.screenshot(
                 path=str(screenshots / "home-mobile.png"), full_page=True, animations="disabled"
             )
+        check_mobile_menu(page)
 
         # Search from the homepage, then follow a guide result into the docs.
         page.set_viewport_size({"width": 1440, "height": 900})
@@ -469,11 +552,13 @@ def check(site: Path, screenshots: Path | None = None):
             "link", name="Authentication", exact=True
         ).click()
         expect(page.get_by_role("heading", name="Connect Canvas", exact=True)).to_be_visible()
+        page.get_by_role("button", name="Open menu", exact=True).click()
         expect(
             page.get_by_role("navigation", name="Main navigation").get_by_role(
                 "link", name="Guide", exact=True
             )
         ).to_have_attribute("aria-current", "location")
+        page.get_by_role("button", name="Close menu", exact=True).click()
         for width in (1440, 1024, 900, 768, 390, 320):
             page.set_viewport_size({"width": width, "height": 900})
             reference_navigation = page.locator("#reference-navigation")
@@ -627,6 +712,16 @@ def check(site: Path, screenshots: Path | None = None):
         check_theme(blocked_page, "dark")
         blocked_page.emulate_media(color_scheme="light")
         check_theme(blocked_page, "light")
+        blocked_page.get_by_role("button", name="Open menu", exact=True).tap()
+        expect(blocked_page.locator("#site-navigation")).to_be_visible()
+        check_header(blocked_page)
+        blocked_page.get_by_role("navigation", name="Main navigation").get_by_role(
+            "link", name="Guide", exact=True
+        ).tap()
+        expect(
+            blocked_page.get_by_role("heading", name="Getting started", exact=True)
+        ).to_be_visible()
+        expect(blocked_page.locator("#site-navigation")).to_be_hidden()
         blocked.close()
         # Hold the first index fetch to observe loading, then mock a failure and retry.
         retry_context = browser.new_context()
@@ -682,10 +777,13 @@ def check(site: Path, screenshots: Path | None = None):
         no_script = browser.new_context(java_script_enabled=False, color_scheme="dark")
         no_script.route(ORIGIN + "**", serve)
         no_script_page = no_script.new_page()
+        no_script_page.set_viewport_size({"width": 320, "height": 900})
         no_script_page.goto(ORIGIN)
         expect(no_script_page.get_by_role("heading", level=1)).to_be_visible()
         expect(no_script_page.locator(".theme-toggle")).to_be_hidden()
         expect(no_script_page.locator("#site-search-open")).to_be_hidden()
+        expect(no_script_page.locator("#site-menu-toggle")).to_be_hidden()
+        expect(no_script_page.locator("#site-navigation")).to_be_visible()
         no_script_page.get_by_text("View full prompt", exact=True).click()
         expect(no_script_page.locator("#setup-prompt")).to_be_visible()
         assert (
@@ -707,7 +805,8 @@ def check(site: Path, screenshots: Path | None = None):
     print(
         "Browser checks passed: tabs/keyboard, global search/load/retry, "
         "clipboard success/failure, catalog/groups, docs/navigation, "
-        "320–1440px layout/touch targets, sun/moon toggle/keyboard/touch, "
+        "320–1440px layout/touch targets, hamburger/keyboard/touch/resize, "
+        "sun/moon toggle/keyboard/touch, "
         "theme persistence/system changes/cross-tab sync, "
         "pre-paint initialization, blocked storage, no-JS fallback, contrast, reduced motion."
     )

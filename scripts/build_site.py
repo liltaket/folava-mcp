@@ -485,9 +485,11 @@ def build(output: Path, base_path: str = "/folava-mcp/") -> None:
     output.mkdir(parents=True, exist_ok=True)
     shutil.copytree(ROOT / "site" / "assets", output / "assets", dirs_exist_ok=True)
     shutil.copyfile(ROOT / "site/assets/mark.svg", output / "assets/favicon.svg")
-    index_text = json.dumps(search_index(), ensure_ascii=False, separators=(",", ":")) + "\n"
-    search_version = hashlib.sha256(index_text.encode()).hexdigest()[:12]
-    (output / "search-index.json").write_text(index_text, encoding="utf-8")
+    index_bytes = (
+        json.dumps(search_index(), ensure_ascii=False, separators=(",", ":")) + "\n"
+    ).encode("utf-8")
+    search_version = hashlib.sha256(index_bytes).hexdigest()[:12]
+    (output / "search-index.json").write_bytes(index_bytes)
 
     def write(route, title, body, active=""):
         target = output / route

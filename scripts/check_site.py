@@ -171,7 +171,7 @@ def check(site: Path, screenshots: Path | None = None):
         )
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(ORIGIN)
-        expect(page.get_by_role("heading", level=1)).to_have_text("Your agent,meet Canvas.")
+        expect(page.get_by_role("heading", level=1)).to_have_text("Your agent,meet Canvas")
         theme = page.locator("#theme-toggle")
         expect(page.get_by_role("combobox")).to_have_count(0)
         check_theme(page, "light")
@@ -578,8 +578,8 @@ def check(site: Path, screenshots: Path | None = None):
             }"""
         )
         assert stroke["start"] == 100 and 0 < stroke["middle"] < 100 and stroke["end"] == 0
-        assert 10 < stroke["movingX"] < stroke["restingX"] == 270
-        assert stroke["restingY"] == 41 and stroke["restingOpacity"] == "1"
+        assert 10 < stroke["movingX"] < stroke["restingX"] == 282
+        assert stroke["restingY"] == 58 and stroke["restingOpacity"] == "0"
         assert (
             page.locator(".agent-setup").evaluate(
                 "element => getComputedStyle(element).animationIterationCount"

@@ -513,7 +513,7 @@ def build(output: Path, base_path: str = "/folava-mcp/") -> None:
             .replace("{{BRAND_MARK}}", brand_mark())
         )
 
-    write("index.html", "Your agent, meet Canvas.", home)
+    write("index.html", "Your agent, meet Canvas", home)
     write("catalog/index.html", "API catalog", catalog_page, "catalog")
     for slug, (title, _) in DOCUMENTS.items():
         write(

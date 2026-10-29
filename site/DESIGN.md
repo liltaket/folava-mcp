@@ -63,8 +63,9 @@ configuration and keeps authentication private. Coursework examples are fictiona
 the website never connects to a student account.
 
 The selected pencil study adds a small school reference without adding hero copy.
-A detailed pencil draws one softly curved lilac line beneath Canvas, then lifts
-its tip and rests. The 3.8-second stroke replaces the former card-edge trace;
+A detailed pencil draws one softly curved lilac line beneath Canvas, then moves
+aside and fades out. The heading has no final period, leaving the completed line
+clear of extra punctuation or a parked pencil. Motion runs once for 3.8 seconds;
 the setup note keeps its subtle arrival. No looping motion, scroll reveals or
 decorative stagger. Reduced-motion views retain a complete static mark; the
 artwork also works without scripts. Clear keyboard focus, contrast and responsive

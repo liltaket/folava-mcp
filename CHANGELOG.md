@@ -10,8 +10,8 @@
   full setup prompt, and removed a repeated benefits section. Kept access and
   data-handling limits visible without promising unchanged Canvas account state.
 - Refined the selected pencil hero: one curved lilac stroke, a detailed pencil
-  that lifts and rests, and a matching quiet button tint. Replaced the card-edge
-  animation; reduced-motion readers receive the complete static mark.
+  that moves aside and fades, and a matching quiet button tint. Replaced the
+  card-edge animation; reduced-motion readers receive the complete static mark.
 - Replaced the theme menu with a sun/moon button. Mobile navigation puts the
   mark and theme button above a full-width row of links with larger text.
 - Compacted the hero into a short installation row whose copy icon copies the

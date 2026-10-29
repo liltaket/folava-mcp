@@ -409,7 +409,8 @@ td code {
     stroke: currentColor;
     stroke-width: 1.2;
     stroke-linejoin: round;
-    transform: translate(270px, 41px) rotate(-38deg)
+    transform: translate(282px, 58px) rotate(-24deg);
+    opacity: 0
 }
 
 .pencil-tip,
@@ -1463,8 +1464,8 @@ td code {
         10% { opacity: 1; transform: translate(10px, 51px) rotate(-44deg) }
         35% { transform: translate(96px, 47px) rotate(-41deg) }
         65% { transform: translate(198px, 46px) rotate(-44deg) }
-        86% { transform: translate(270px, 49px) rotate(-40deg) }
-        100% { opacity: 1; transform: translate(270px, 41px) rotate(-38deg) }
+        86% { opacity: 1; transform: translate(270px, 49px) rotate(-40deg) }
+        100% { opacity: 0; transform: translate(282px, 58px) rotate(-24deg) }
     }
 
     @keyframes sample-arrive {

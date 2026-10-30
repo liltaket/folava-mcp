@@ -273,9 +273,10 @@ def frame(
         return f'<a href="{base}{path}"{current}>{label}</a>'
 
     canonical = SITE + route.removesuffix("index.html")
+    tab_title = "Folava MCP" if route == "index.html" else f"{title} · Folava MCP"
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{ESC(title)} · Folava MCP</title>
+<title>{ESC(tab_title)}</title>
 <meta name="description" content="Canvas courses, deadlines and feedback for your agent. Folava MCP is an independent open-source development preview.">
 <meta name="theme-color" content="#ffffff"><meta name="color-scheme" content="light dark">
 <link rel="canonical" href="{canonical}"><link rel="icon" href="{asset_url(base, "favicon.svg")}" type="image/svg+xml">

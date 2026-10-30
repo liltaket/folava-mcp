@@ -115,11 +115,6 @@ button:disabled {
     cursor: default
 }
 
-[data-copy][data-copied]::after {
-    content: '✓' / '';
-    margin-left: .4em
-}
-
 .visually-hidden {
     position: absolute;
     width: 1px;
@@ -399,7 +394,7 @@ td code {
     height: .8em;
     overflow: visible;
     pointer-events: none;
-    z-index: -1;
+    z-index: 1;
     color: var(--hero-accent)
 }
 
@@ -410,10 +405,11 @@ td code {
     stroke-linecap: round;
     stroke-dasharray: 100;
     stroke-dashoffset: 0;
-    opacity: .4
+    opacity: .65
 }
 
 .hero-pencil {
+    color: color-mix(in srgb, var(--hero-accent) 82%, var(--ink));
     fill: currentColor;
     stroke: currentColor;
     stroke-width: 1.2;
@@ -430,7 +426,7 @@ td code {
 .pencil-detail {
     fill: none;
     stroke: var(--paper);
-    opacity: .65
+    opacity: 1
 }
 
 .pencil-lead {
@@ -545,8 +541,12 @@ td code {
     display: block
 }
 
-.icon-copy[data-copied]::after {
-    content: none
+.copy-feedback,
+.agent-setup .copy-feedback {
+    margin: 12px 0 0;
+    font-size: .78rem;
+    line-height: 1.5;
+    color: var(--muted)
 }
 
 .prompt-details summary {
@@ -787,7 +787,7 @@ td code {
 }
 
 .code-block:has(.copy-button:not([hidden])) pre {
-    padding-top: 27px
+    padding-top: 34px
 }
 
 .code-block code {
@@ -797,19 +797,7 @@ td code {
 .copy-button {
     position: absolute;
     top: 6px;
-    right: 8px;
-    border: 1px solid var(--line);
-    background: var(--paper);
-    color: var(--link);
-    font-size: .7rem;
-    padding: 4px 10px;
-    border-radius: 5px;
-    min-width: 54px;
-    min-height: 30px
-}
-
-.copy-button:hover {
-    background: var(--active)
+    right: 8px
 }
 
 .section-intro p {
@@ -883,26 +871,6 @@ td code {
 
 .footer-links a {
     color: var(--muted)
-}
-
-.copy-status {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    width: max-content;
-    max-width: min(480px, calc(100% - 32px));
-    transform: translateX(-50%);
-    background: var(--status);
-    color: var(--on-status);
-    border-radius: 8px;
-    padding: 12px 18px;
-    font-size: .8rem;
-    z-index: 20;
-    box-shadow: 0 4px 20px rgb(0 0 0 / 8%)
-}
-
-.copy-status:empty {
-    display: none
 }
 
 [hidden] {
@@ -1353,7 +1321,7 @@ td code {
         margin-bottom: 8px
     }
 
-    .hero .agent-setup > p:not(.setup-note) {
+    .hero .agent-setup > p.muted:not(.setup-note) {
         margin: 0;
         line-height: 1.5
     }
@@ -1499,11 +1467,6 @@ td code {
         min-width: 0
     }
 
-    .copy-status {
-        max-width: calc(100% - 32px);
-        width: max-content
-    }
-
     .not-found {
         padding-block: 60px
     }
@@ -1565,7 +1528,7 @@ td code {
     .copy-button,
     .icon-copy,
     .hero-annotation,
-    .copy-status {
+    #copy-status {
         display: none !important
     }
 

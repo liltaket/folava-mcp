@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Unified copy controls around the overlapping-square icon, with an in-button
+  check and inline manual-copy help instead of a toast. Made the hero pencil
+  more distinct and placed its drawing animation in front of the headline.
 - Refined the mobile hero with a fluid two-line heading, a narrower reading
   column and a more compact setup note that brings the copy action into view sooner.
 - Collapsed mobile navigation into a hamburger disclosure while keeping search

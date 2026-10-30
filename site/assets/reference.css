@@ -451,7 +451,6 @@ html:has(.search-dialog[open]) { overflow: hidden; scrollbar-gutter: stable; }
     .reference-layout .prose h2 { margin-top: 38px; font-size: 1.45rem; }
     .reference-layout .prose > h1 + p { font-size: 1.02rem; }
     .reference-layout .prose pre { padding: 16px; }
-    .reference-layout .copy-button { min-height: 44px; min-width: 60px; }
     .reference-layout .code-block:has(.copy-button:not([hidden])) pre { padding-top: 38px; }
     .catalog-layout .catalog-intro { padding-top: 0; }
     .catalog-layout .catalog-controls { margin-top: 24px; }

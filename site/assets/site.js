@@ -70,11 +70,17 @@
   let clearStatus;
   document.querySelectorAll('[data-copy]').forEach(button => {
     button.hidden = false;
+    const action = button.getAttribute('aria-label');
+    button.title = action;
     let resetLabel;
     let copying = false;
+    let feedback;
     button.addEventListener('click', async () => {
       if (copying) return;
       copying = true;
+      clearTimeout(resetLabel);
+      feedback?.remove();
+      button.title = action;
       button.setAttribute('aria-busy', 'true');
       delete button.dataset.copied;
       const code = button.dataset.copyTarget
@@ -85,9 +91,12 @@
         if (!navigator.clipboard?.writeText) throw new Error('clipboard unavailable');
         await navigator.clipboard.writeText(code.textContent);
         button.dataset.copied = 'true';
+        button.title = 'Copied';
         status.textContent = label + ' copied.';
-        clearTimeout(resetLabel);
-        resetLabel = setTimeout(() => { delete button.dataset.copied; }, 1800);
+        resetLabel = setTimeout(() => {
+          delete button.dataset.copied;
+          button.title = action;
+        }, 1800);
       } catch {
         code.closest('details')?.setAttribute('open', '');
         const range = document.createRange();
@@ -95,6 +104,12 @@
         const selection = window.getSelection();
         selection.removeAllRanges();
         selection.addRange(range);
+        feedback = document.createElement('p');
+        feedback.className = 'copy-feedback';
+        feedback.textContent = 'Text selected. Copy it manually.';
+        const container = button.closest('.code-block, .setup-command');
+        if (container.matches('.setup-command')) container.after(feedback);
+        else container.append(feedback);
         status.textContent = 'Copy is unavailable here. The ' + label.toLowerCase()
           + ' is selected; copy it manually.';
       } finally {

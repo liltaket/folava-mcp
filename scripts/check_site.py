@@ -52,7 +52,7 @@ def check_theme(page, expected):
           const selectors = ['body', '.muted', '.site-nav a', '.theme-toggle', '.menu-toggle',
             '.primary', '.source-type', '.source-meta',
             '.install-band', '.install-band .small', '.code-block', '.copy-button',
-            '.operation summary span', '.docs-sidebar a', 'input', '.copy-status',
+            '.operation summary span', '.docs-sidebar a', 'input', '.copy-feedback',
             '.agent-setup', '.setup-prompt', '.icon-copy', '.clear-search',
             '.prompt-details summary', '.setup-command code'];
           return selectors.flatMap(selector => [...document.querySelectorAll(selector)]
@@ -191,6 +191,54 @@ def check_search_shell(page):
     return trigger, search_input
 
 
+def check_copy_controls(page):
+    for route, name in (
+        ("", "Copy installation command"),
+        ("docs/getting-started/", "Copy code block"),
+        ("catalog/#op-assignments", "Copy assignments example"),
+    ):
+        page.goto(ORIGIN + route)
+        page.evaluate(
+            "() => { navigator.clipboard.writeText = async text => { window.copied = text; }; }"
+        )
+        for control in page.locator("[data-copy]").all():
+            assert control.inner_text().strip() == ""
+            assert control.get_attribute("aria-label")
+        button = page.get_by_role("button", name=name, exact=True).first
+        block = button.locator("xpath=..")
+        expected = block.locator("code").text_content()
+        button.click()
+        expect(button.locator(".check-glyph")).to_be_visible()
+        expect(button.locator(".copy-glyph")).to_be_hidden()
+        assert page.evaluate("window.copied") == expected
+        bounds = button.bounding_box()
+        assert bounds["width"] >= 44 and bounds["height"] >= 44
+        # Announcements remain available to assistive tech without a visible toast.
+        status = page.locator("#copy-status")
+        expect(status).to_have_attribute("role", "status")
+        bounds = status.bounding_box()
+        assert bounds["width"] <= 1 and bounds["height"] <= 1
+        page.evaluate(
+            "() => { navigator.clipboard.writeText = async () => { throw new Error('denied'); }; }"
+        )
+        button.click()
+        expect(block.locator(".copy-feedback")).to_have_text("Text selected. Copy it manually.")
+        selection = page.evaluate("window.getSelection().toString()")
+        # Rendered selection omits a code fence's final newline, preserving internal whitespace.
+        assert selection == expected.rstrip("\n"), (route, selection, expected)
+        expect(button.locator(".copy-glyph")).to_be_visible()
+        button.click()
+        expect(block.locator(".copy-feedback")).to_have_count(1)
+        page.evaluate(
+            "() => { navigator.clipboard.writeText = async text => { window.copied = text; }; }"
+        )
+        button.click()
+        expect(block.locator(".copy-feedback")).to_have_count(0)
+        expect(button.locator(".check-glyph")).to_be_visible()
+        assert page.evaluate("window.copied") == expected
+    page.goto(ORIGIN)
+
+
 def open_search(page, *, shortcut=None):
     trigger = page.get_by_role("button", name="Search guides and API", exact=True)
     if shortcut:
@@ -292,6 +340,7 @@ def check(site: Path, screenshots: Path | None = None):
         other.close()
         page.goto(ORIGIN)
         check_theme(page, "light")
+        check_copy_controls(page)
         # Proper roving tab state and keyboard focus, including wrapping.
         feedback = page.get_by_role("tab", name="Feedback")
         feedback.click()
@@ -338,6 +387,9 @@ def check(site: Path, screenshots: Path | None = None):
         )
         page.get_by_role("button", name="Copy setup prompt").click()
         expect(page.locator("#copy-status")).to_contain_text("copy it manually")
+        expect(page.locator(".agent-setup .copy-feedback")).to_have_text(
+            "Text selected. Copy it manually."
+        )
         expect(page.locator(".prompt-details")).to_have_attribute("open", "")
         expect(page.locator("#setup-prompt")).to_be_visible()
         assert page.evaluate("window.getSelection().toString()") == prompt
@@ -654,9 +706,10 @@ def check(site: Path, screenshots: Path | None = None):
               animations.forEach(animation => { animation.currentTime = 1900; });
               const middle = parseFloat(getComputedStyle(ink).strokeDashoffset);
               const moving = new DOMMatrix(getComputedStyle(pencil).transform);
+              const movingOpacity = getComputedStyle(pencil).opacity;
               animations.forEach(animation => { animation.currentTime = 3800; });
               const resting = new DOMMatrix(getComputedStyle(pencil).transform);
-              return {start, middle, movingX: moving.e,
+              return {start, middle, movingX: moving.e, movingOpacity,
                 end: parseFloat(getComputedStyle(ink).strokeDashoffset),
                 restingX: resting.e, restingY: resting.f,
                 restingOpacity: getComputedStyle(pencil).opacity};
@@ -664,6 +717,15 @@ def check(site: Path, screenshots: Path | None = None):
         )
         assert stroke["start"] == 100 and 0 < stroke["middle"] < 100 and stroke["end"] == 0
         assert 10 < stroke["movingX"] < stroke["restingX"] == 282
+        assert stroke["movingOpacity"] == "1"
+        assert (
+            int(
+                page.locator(".hero-annotation").evaluate(
+                    "element => getComputedStyle(element).zIndex"
+                )
+            )
+            > 0
+        )
         assert stroke["restingY"] == 58 and stroke["restingOpacity"] == "0"
         assert (
             page.locator(".agent-setup").evaluate(

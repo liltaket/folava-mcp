@@ -252,6 +252,16 @@ def search_icon() -> str:
     return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>'
 
 
+def copy_icons() -> str:
+    return (
+        '<svg class="copy-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
+        '<rect x="8" y="8" width="12" height="12" rx="2"/>'
+        '<path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>'
+        '<svg class="check-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
+        '<path d="m5 12 4 4 10-10"/></svg>'
+    )
+
+
 def frame(
     title: str, content: str, base: str, *, route: str, active: str = "", search_version: str = ""
 ) -> str:
@@ -280,7 +290,7 @@ def frame(
 </button><button id="site-menu-toggle" class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-navigation" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="menu-line-top" d="M5 8h14"/><path class="menu-line-bottom" d="M5 16h14"/></svg></button></div></div></header>
 <main id="main" tabindex="-1">{content}</main>
 <footer class="site-footer"><div class="wrap footer-inner"><p>Folava MCP · Independent open source · Apache-2.0</p><div class="footer-links"><a href="{base}docs/security/">Security</a><a href="{REPO}/releases">Releases</a><a href="{REPO}/issues">Issues</a></div></div></footer>
-<div id="copy-status" class="copy-status" role="status" aria-live="polite"></div>
+<div id="copy-status" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>
 <dialog id="site-search" class="search-dialog" aria-labelledby="site-search-title">
 <div class="search-input-row">{search_icon()}<label id="site-search-title" class="visually-hidden" for="site-search-input">Search guides and API</label><input id="site-search-input" type="search" role="combobox" aria-autocomplete="list" aria-controls="site-search-results" aria-expanded="true" placeholder="Search guides and API…" autocomplete="off" spellcheck="false"><button id="site-search-close" class="search-close" type="button" aria-label="Close search"><span class="search-escape-label">Esc</span><svg class="search-close-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
 <div class="search-panel"><p id="site-search-state" class="search-state" role="status" aria-live="polite"></p><ul id="site-search-results" role="listbox" aria-label="Search results"></ul><button id="site-search-retry" type="button" hidden>Retry search</button></div>
@@ -317,8 +327,8 @@ def markdown_document(source: Path, base: str) -> str:
     def fence(tokens, idx, options, env):
         block = fence_rule(tokens, idx, options, env)
         return (
-            '<div class="code-block">' + block + '<button class="copy-button" '
-            'data-copy hidden aria-label="Copy code block">Copy</button></div>'
+            '<div class="code-block">' + block + '<button class="copy-button icon-copy" '
+            'data-copy hidden aria-label="Copy code block">' + copy_icons() + "</button></div>"
         )
 
     md.renderer.rules["fence"] = fence
@@ -443,7 +453,7 @@ def catalog_page(base: str) -> str:
 <p><strong>Path parameters:</strong> {ESC(required)}</p><p><strong>Query parameters:</strong> {ESC(keys)}</p>
 <p>Common pagination: <code>page</code>, <code>per_page</code>, <code>bookmark</code>, <code>cursor</code>.
 Permissions and token scopes still apply. <a href="{ESC(op["docs"])}">Canvas endpoint documentation</a></p>
-<div class="code-block"><pre><code>{code}</code></pre><button class="copy-button" data-copy hidden aria-label="Copy {ESC(op["id"])} example">Copy</button></div></div></details>''')
+<div class="code-block"><pre><code>{code}</code></pre><button class="copy-button icon-copy" data-copy hidden aria-label="Copy {ESC(op["id"])} example">{copy_icons()}</button></div></div></details>''')
     sections = []
     navigation = []
     for key, label in CATALOG_GROUPS:
@@ -511,6 +521,7 @@ def build(output: Path, base_path: str = "/folava-mcp/") -> None:
             .replace("{{VERSION}}", release_version())
             .replace("{{INSTALL_COMMAND}}", ESC(version_install()))
             .replace("{{AGENT_PROMPT}}", ESC(AGENT_PROMPT))
+            .replace("{{COPY_ICONS}}", copy_icons())
             .replace("{{BRAND_MARK}}", brand_mark())
         )
 

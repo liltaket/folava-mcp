@@ -65,14 +65,18 @@ labels in the results. Keyboard selection, focus restoration, loading, empty and
 retry states belong to the same flow. Queries remain in memory in the browser;
 the only search request fetches the public index without query terms.
 
-Copy controls keep the setup prompt, link and commands available with a manual
-selection fallback. The agent guide starts with a demo, preserves existing host
+Copy controls share the same overlapping-square icon and 44px target across the
+homepage, guides and API examples. Success briefly replaces the icon with a check;
+screen readers receive an announcement without a visual toast. Blocked copying
+selects the source and shows a small instruction beside it for manual copying.
+The agent guide starts with a demo, preserves existing host
 configuration and keeps authentication private. Coursework examples are fictional;
 the website never connects to a student account.
 
 The selected pencil study adds a small school reference without adding hero copy.
-A detailed pencil draws one softly curved lilac line beneath Canvas, then moves
-aside and fades out. The heading has no final period, leaving the completed line
+A solid, clearly defined pencil draws one curved lilac line beneath Canvas,
+passing in front of the letters before moving aside and fading out. The heading
+has no final period, leaving the completed line
 clear of extra punctuation or a parked pencil. Motion runs once for 3.8 seconds;
 the setup note keeps its subtle arrival. No looping motion, scroll reveals or
 decorative stagger. Reduced-motion views retain a complete static mark; the

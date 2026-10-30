@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Tightened the desktop navigation and simplified its search control. Made the
+  search dialog rounder and more compact, with five initial suggestions and
+  shorter excerpts shown only after typing.
 - Unified copy controls around the overlapping-square icon, with an in-button
   check and inline manual-copy help instead of a toast. Made the hero pencil
   more distinct and placed its drawing animation in front of the headline.

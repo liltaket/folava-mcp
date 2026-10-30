@@ -584,8 +584,10 @@ def check(site: Path, screenshots: Path | None = None):
             )
             == stored_state
         )
-        page.get_by_role("button", name="Close search", exact=True).click()
+        # One Escape closes a populated search input instead of only clearing its text.
+        search_input.press("Escape")
         expect(page.locator("#site-search")).to_be_hidden()
+        expect(page.get_by_role("button", name="Search guides and API", exact=True)).to_be_focused()
         for width in (320, 390, 768, 1440):
             page.set_viewport_size({"width": width, "height": 900})
             check_header(page)

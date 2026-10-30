@@ -39,7 +39,7 @@
         || indexURL.username || indexURL.password || base.username || base.password) return;
   } catch { return; }
 
-  const LIMIT = 14;
+  const LIMIT = 8;
   const fold = value => value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
     .toLocaleLowerCase().replace(/\s+/g, ' ').trim();
   const wordsOf = value => fold(value).replace(/[^a-z0-9\u0080-\uffff]+/g, ' ').trim();
@@ -135,7 +135,8 @@
   };
 
   const snippet = (entry, words) => {
-    const text = (entry.summary ?? entry.text).replace(/\s+/g, ' ').trim();
+    const source = (entry.summary ?? entry.text).replace(/\s+/g, ' ').trim();
+    const text = source.startsWith(entry.title) ? source.slice(entry.title.length).trim() : source;
     if (!text) return '';
     const lower = fold(text);
     const positions = words.map(word => lower.indexOf(word)).filter(index => index >= 0);
@@ -144,8 +145,8 @@
       const boundary = text.indexOf(' ', start);
       if (boundary !== -1 && boundary < start + 20) start = boundary + 1;
     }
-    const excerpt = text.slice(start, start + 155).trim();
-    return `${start ? '…' : ''}${excerpt}${start + 155 < text.length ? '…' : ''}`;
+    const excerpt = text.slice(start, start + 110).trim();
+    return `${start ? '…' : ''}${excerpt}${start + excerpt.length < text.length ? '…' : ''}`;
   };
 
   const close = () => {
@@ -169,8 +170,8 @@
     } else {
       const guides = entries.filter(entry => entry.kind === 'guide');
       const pages = guides.filter(entry => !new URL(entry.href).hash);
-      matches = [...(pages.length ? pages : guides).slice(0, 6),
-        ...entries.filter(entry => entry.kind === 'api').slice(0, 4)];
+      matches = [...(pages.length ? pages : guides).slice(0, 4),
+        ...entries.filter(entry => entry.kind === 'api').slice(0, 1)];
     }
     matches.slice(0, LIMIT).forEach((entry, index) => {
       const item = document.createElement('li');
@@ -197,7 +198,7 @@
         meta.append(context);
       }
       link.append(meta, title);
-      const excerpt = snippet(entry, words);
+      const excerpt = query ? snippet(entry, words) : '';
       if (excerpt) {
         const detail = document.createElement('span');
         detail.className = 'search-result-snippet';
@@ -221,7 +222,7 @@
       links.push(link);
     });
     setActive(links.length ? 0 : -1);
-    state.textContent = !query ? (links.length ? 'Suggested guides and API operations.' : 'No search entries are available.')
+    state.textContent = !query ? (links.length ? 'Suggestions' : 'No search entries are available.')
       : !matches.length ? 'No results. Try a different word or an operation ID.'
         : matches.length > LIMIT ? `Showing ${LIMIT} of ${matches.length} results.`
           : `${matches.length} ${matches.length === 1 ? 'result' : 'results'}.`;
@@ -280,7 +281,10 @@
   input.addEventListener('input', render);
   input.addEventListener('keydown', event => {
     if (event.isComposing || event.keyCode === 229 || event.altKey || event.ctrlKey || event.metaKey) return;
-    if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && links.length) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      close();
+    } else if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && links.length) {
       event.preventDefault();
       const direction = event.key === 'ArrowDown' ? 1 : -1;
       setActive((active + direction + links.length) % links.length, true);

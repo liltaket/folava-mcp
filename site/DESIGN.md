@@ -23,7 +23,9 @@ the project name stays readable beside it. No Folava GUI assets are used.
 
 The round, lightly translucent navigation is the main expressive detail. Its
 blur sits over a sufficiently opaque surface; a solid fallback keeps text
-readable when transparency is unavailable. Other sections use open space,
+readable when transparency is unavailable. Desktop links and controls share a
+compact capsule; search and its shortcut have no extra outline at rest.
+Other sections use open space,
 modest corner radii and quiet rules. The layout stays left-aligned, with the
 actual setup note opposite the introduction and manual setup below.
 
@@ -64,6 +66,8 @@ headings and API operations share a versioned static index, with visible type
 labels in the results. Keyboard selection, focus restoration, loading, empty and
 retry states belong to the same flow. Queries remain in memory in the browser;
 the only search request fetches the public index without query terms.
+The rounded dialog opens with five compact suggestions. Excerpts appear after
+typing, limited to one visible line, and a search shows up to eight results.
 
 Copy controls share the same overlapping-square icon and 44px target across the
 homepage, guides and API examples. Success briefly replaces the icon with a check;

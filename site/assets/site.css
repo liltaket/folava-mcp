@@ -236,9 +236,9 @@ td code {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
-    width: min(1060px, calc(100% - 40px));
-    padding: 10px 14px 10px 20px;
+    gap: 16px;
+    width: min(960px, calc(100% - 40px));
+    padding: 8px 12px 8px 18px;
     border: 1px solid var(--line);
     border-radius: 999px;
     background: var(--paper);
@@ -300,11 +300,12 @@ td code {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-    font-size: .87rem;
+    font-size: .84rem;
     text-decoration: none;
     color: var(--link);
     border-radius: 999px;
-    padding: 9px 13px
+    padding: 9px 11px;
+    white-space: nowrap
 }
 
 .site-nav a:hover,
@@ -316,8 +317,7 @@ td code {
 .header-controls {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 12px
+    gap: 4px
 }
 
 .theme-toggle,

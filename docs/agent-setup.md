@@ -63,7 +63,7 @@ A successful add command or listing establishes configuration, not a connection.
 
 ## 4. Verify the connection through the host
 
-Confirm that all eight tools are discovered, then call `canvas_courses` with
+Confirm that all ten tools are discovered, then call `canvas_courses` with
 `{}` and `canvas_file` with `{"file_id":"601"}`. Expect synthetic course `101`
 (code `ENV101`) and the text field guide with size and SHA-256. See the
 [tool guide](https://liltaket.github.io/folava-mcp/docs/tools/) for more workflows.

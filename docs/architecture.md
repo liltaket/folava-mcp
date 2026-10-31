@@ -6,7 +6,7 @@ LLM SDK or background service is required.
 ```text
 MCP tools ─┐
 CLI reads ─┼─ CanvasClient ─ policy + catalog ─ public HTTPS Canvas REST
-Poller ────┘        └─ file metadata + public_url API ─ audited S3 REST storage
+Poller ────┘        └─ file metadata + public_url API ─ reviewed S3 / InstFS content
 
 Human auth CLI ─ OAuth credential lifecycle ─ OS keyring
                        └─ secret-free profile metadata
@@ -27,12 +27,14 @@ Requests use HTTPS port 443, no environment proxies, public-only DNS resolution
 and a pinned TCP destination with the original Host and TLS SNI. Mixed public and
 private DNS answers fail closed. Keepalive is disabled to prevent TLS connection
 reuse across original hostnames sharing a pinned IP. API redirects are refused;
-attachment content accepts audited AWS S3 REST endpoints only, with every hop
-validated before networking and no Canvas authorization or cookies. Metadata UI
-URLs are never fetched. Canvas/local file routes, InstFS, CDN and custom storage
-backends are refused. A trusted injected HTTP transport exists only for
-deterministic unit tests. Private-network Canvas installations require a separately designed
-narrow network policy; there is no global disable-security option.
+attachment content accepts audited AWS S3 REST endpoints and one reviewed InstFS
+content capability, including its constrained terminal CDN delivery. Every hop
+is validated before networking and carries no Canvas authorization or cookies.
+Metadata UI URLs are never fetched. Canvas/local file routes, other InstFS/CDN
+routes or hosts and custom storage backends are refused. A trusted injected HTTP
+transport exists only for deterministic unit tests. Private-network Canvas
+installations require a separately designed narrow network policy; there is no
+global disable-security option.
 
 Resource reads allow 1–20 pages, 20,000 items, up to 10 MB decoded JSON per response
 and 20 MB aggregate, with a 90-second operation deadline. Compressed responses

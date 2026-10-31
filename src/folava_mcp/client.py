@@ -24,6 +24,8 @@ import httpx
 
 from .catalog import Operation
 from .policy import (
+    INSTFS_CDN_HOST,
+    INSTFS_HOSTS,
     PolicyError,
     build_url,
     operation_path,
@@ -422,8 +424,9 @@ class CanvasClient:
                 if not isinstance(url, str):
                     raise CanvasError("upstream", "Canvas returned no storage download URL.")
                 seen: set[str] = set()
+                instfs_source = None
                 for _ in range(6):
-                    url = validate_storage_download(url, self.origin)
+                    url = validate_storage_download(url, self.origin, instfs_source=instfs_source)
                     if url in seen:
                         raise CanvasError("redirect", "File download contains a redirect cycle.")
                     seen.add(url)
@@ -431,9 +434,18 @@ class CanvasClient:
                         url, authorize=False, max_bytes=max_bytes, redirects=True
                     )
                     if 300 <= status < 400:
+                        if urlsplit(url).hostname == INSTFS_CDN_HOST:
+                            raise CanvasError(
+                                "redirect", "InstFS CDN must return terminal content."
+                            )
                         location = headers.get("location")
                         if not location:
                             raise CanvasError("redirect", "File download redirect has no location.")
+                        instfs_source = (
+                            url
+                            if status == 302 and urlsplit(url).hostname in INSTFS_HOSTS
+                            else None
+                        )
                         url = urljoin(url, location)
                         continue
                     if status != 200 or "content-range" in headers:

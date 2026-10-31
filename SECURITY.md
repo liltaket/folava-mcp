@@ -23,14 +23,17 @@ no guaranteed response time. Do not test against accounts you do not own.
   [the current catalog limits](docs/tools.md#excluded-reads).
 - Public HTTPS destinations are DNS-pinned. API redirects are refused. Attachment
   content uses the fixed file `public_url` API pointer and audited AWS S3 REST
-  destinations only, checked before every hop. Storage requests carry no Canvas
-  authorization or cookies. Canvas UI/file-host downloads, InstFS, CDN, custom
-  and local-storage fallbacks are refused.
+  destinations or the exact reviewed InstFS host/content capability described in
+  [read safety](docs/research/read-safety.md), checked before every hop. Storage
+  requests carry no Canvas authorization or cookies. Canvas UI/file-host downloads,
+  other InstFS/CDN routes or hosts, custom and local-storage fallbacks are refused.
 - OAuth callback state is verified. Credentials stay outside tool inputs, config
   snippets, event bodies and diagnostic messages. OAuth itself changes credential
   state separately from read-only learning-resource access.
-- Attachments and course text are untrusted data. No content is executed, no shell
-  hooks are provided, and no PDF/archive extraction is attempted.
+- Attachments and course text are untrusted data. No content is executed and no
+  shell hooks are provided. Opt-in PDF text extraction uses local Poppler processes
+  with deadlines, output bounds and private temporary files. This is not an OS
+  sandbox; keep Poppler updated. OCR and archive extraction are unsupported.
 
 These controls limit resource actions; they do not promise an unchanged remote
 account. Canvas GET handlers can write ordinary access logs or refresh derived

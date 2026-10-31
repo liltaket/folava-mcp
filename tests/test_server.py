@@ -44,6 +44,8 @@ async def test_real_stdio_initialize_list_call_and_validation(tmp_path):
                 "canvas_submission",
                 "canvas_agenda",
                 "canvas_file",
+                "canvas_file_text",
+                "canvas_page",
                 "canvas_discover",
             } <= {tool.name for tool in tools}
             assert all(tool.annotations.read_only_hint for tool in tools)
@@ -67,6 +69,14 @@ async def test_real_stdio_initialize_list_call_and_validation(tmp_path):
             assert len(agenda.structured_content["sources"]) == 5
             attachment = await client.call_tool("canvas_file", {"file_id": "601"})
             assert "Observe carefully" in attachment.structured_content["text"]
+            text = await client.call_tool("canvas_file_text", {"file_id": "601"})
+            assert text.structured_content["complete"]
+            assert "Observe carefully" in text.structured_content["text"]
+            page = await client.call_tool(
+                "canvas_page", {"course_id": "101", "page_url": "reading-notes"}
+            )
+            assert page.structured_content["complete"]
+            assert "Observation begins" in page.structured_content["data"]["body"]
             resources = await client.list_resources()
             assert any(str(item.uri) == "folava://guide" for item in resources.resources)
 

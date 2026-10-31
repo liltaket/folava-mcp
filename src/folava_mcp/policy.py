@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import base64
+import json
 import re
 from typing import Any
-from urllib.parse import parse_qsl, quote, urlencode, urlsplit
+from urllib.parse import parse_qsl, quote, unquote, urlencode, urlsplit
 
 from .catalog import DISABLED_OPERATIONS, OPERATIONS, Operation
 
@@ -143,12 +145,111 @@ def validate_continuation(value: str, origin: str, op: Operation, path: str) -> 
         raise PolicyError("Unsafe pagination link was rejected.") from error
 
 
-def validate_storage_download(value: str, canvas_origin: str) -> str:
-    """Allow only audited S3 REST object storage, never a Canvas file controller.
+INSTFS_HOSTS = frozenset({"inst-fs-dub-prod.inscloudgate.net"})
+INSTFS_CDN_HOST = "cdn.inst-fs-dub-prod.inscloudgate.net"
+
+
+def _instfs_filename(path: str, *, cdn: bool = False) -> str | None:
+    uuid = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+    prefix = "/" if cdn else "/files/"
+    match = re.fullmatch(rf"{prefix}{uuid}/((?:[A-Za-z0-9._~-]|%[0-9A-Fa-f]{{2}})+)", path)
+    if not match or len(path) > 4096 or "%25" in path.lower():
+        return None
+    filename = unquote(match[1], errors="strict")
+    if (
+        filename.lower() in (".", "..", "metadata", "duplicate")
+        or any(char in filename for char in ("/", "\\"))
+        or any(ord(char) < 32 or ord(char) == 127 for char in filename)
+    ):
+        return None
+    return match[1]
+
+
+def _instfs_claims(value: str, *, cdn: bool = False) -> dict | None:
+    """Filter capability structure, NOT verify signatures; the storage service does that."""
+    token = re.fullmatch(r"([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)", value)
+    if not token or len(value) > 16_384:
+        return None
+
+    def unique_object(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("Duplicate capability field")
+            result[key] = value
+        return result
+
+    def decode(part):
+        raw = base64.b64decode(part + "=" * (-len(part) % 4), altchars=b"-_", validate=True)
+        return json.loads(raw, object_pairs_hook=unique_object)
+
+    try:
+        header, claims = decode(token[1]), decode(token[2])
+        signature = base64.b64decode(
+            token[3] + "=" * (-len(token[3]) % 4), altchars=b"-_", validate=True
+        )
+        expected_header = {"typ": "JWT", "alg": "HS512", **({"kid": "cdn"} if cdn else {})}
+        expected_keys = {"iat", "exp", "resource", "jti"} | (
+            {"tenant"} if cdn else {"user_id", "host"}
+        )
+        valid = (
+            header == expected_header
+            and len(signature) == 64
+            and isinstance(claims, dict)
+            and set(claims) == expected_keys
+            and type(claims["iat"]) is int
+            and type(claims["exp"]) is int
+            and 0 <= claims["iat"] < claims["exp"]
+            and isinstance(claims["jti"], str)
+            and 1 <= len(claims["jti"]) <= 200
+        )
+        return claims if valid else None
+    except (ValueError, UnicodeError, RecursionError):
+        return None
+
+
+def _instfs_content(url) -> bool:
+    """Recognize only the reviewed anonymous, resource-bound public_url capability."""
+    if _instfs_filename(url.path) is None or not url.query.startswith("token="):
+        return False
+    claims = _instfs_claims(url.query.removeprefix("token="))
+    return bool(
+        claims
+        and claims["user_id"] is None
+        and claims["host"] is None
+        and claims["resource"] == url.path
+    )
+
+
+def _instfs_cdn_content(url, source) -> bool:
+    """Only provider-directed delivery of the same filename; IDs may be remapped."""
+    filename = _instfs_filename(url.path, cdn=True)
+    if filename is None or filename != _instfs_filename(source.path):
+        return False
+    pairs = parse_qsl(url.query, keep_blank_values=True, strict_parsing=True, max_num_fields=2)
+    params = dict(pairs)
+    if len(pairs) != 2 or set(params) != {"token", "content_type"}:
+        return False
+    if not re.fullmatch(r"[A-Za-z0-9.+_-]{1,60}/[A-Za-z0-9.+_-]{1,60}", params["content_type"]):
+        return False
+    claims = _instfs_claims(params["token"], cdn=True)
+    return bool(
+        claims
+        and claims["resource"] == url.path
+        and isinstance(claims["tenant"], str)
+        and 1 <= len(claims["tenant"]) <= 2000
+    )
+
+
+def validate_storage_download(
+    value: str, canvas_origin: str, *, instfs_source: str | None = None
+) -> str:
+    """Allow audited S3 objects and a bounded InstFS content capability.
 
     Canvas public_url can fall back to /files/:id/download on local storage.
-    That GET can change module completion even with preview=1. InstFS, CDN and
-    custom S3 endpoints need their own source audit before being enabled.
+    That GET can change module completion even with preview=1. Other InstFS
+    hosts/routes and custom endpoints remain unsupported. The exact reviewed CDN
+    is accepted only immediately after a validated InstFS 302, with the same filename.
     """
     try:
         url = urlsplit(value)
@@ -156,19 +257,27 @@ def validate_storage_download(value: str, canvas_origin: str) -> str:
         region = r"[a-z]{2}(?:-gov)?-[a-z]+-[0-9]+"
         endpoint = rf"s3(?:[.-]{region}|\.dualstack\.{region})?\.amazonaws\.com"
         host = url.hostname or ""
+        cdn_allowed = False
+        if host == INSTFS_CDN_HOST and instfs_source is not None:
+            source = urlsplit(validate_storage_download(instfs_source, canvas_origin))
+            cdn_allowed = source.hostname in INSTFS_HOSTS and _instfs_cdn_content(url, source)
         if (
             origin == canvas_origin
             or url.fragment
             or "\\" in value
             or any(ord(char) < 33 for char in value)
-            or not re.fullmatch(rf"(?:[a-z0-9][a-z0-9.-]*\.)?{endpoint}", host)
+            or not (
+                re.fullmatch(rf"(?:[a-z0-9][a-z0-9.-]*\.)?{endpoint}", host)
+                or (host in INSTFS_HOSTS and _instfs_content(url))
+                or cdn_allowed
+            )
             or re.search(r"(?:^|/)files/[^/]+/(?:download|preview)(?:/|$)", url.path)
         ):
             raise PolicyError(
-                "Canvas file routes are excluded; content requires audited S3 storage."
+                "Canvas file routes are excluded; content requires supported S3 or InstFS storage."
             )
         return value  # Preserve the signed path/query exactly.
     except (ValueError, UnicodeError):
         raise PolicyError(
-            "File content requires audited direct S3 storage; this destination is unsupported."
+            "File content requires supported direct storage; this destination is unsupported."
         ) from None

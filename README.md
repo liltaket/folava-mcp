@@ -98,8 +98,10 @@ supported collections in the [tool guide](docs/tools.md). OAuth token exchange
 and revocation are separate credential operations.
 
 Attachment reads obtain file metadata and the fixed API storage pointer, then
-accept only audited AWS S3 REST destinations without Canvas authorization or
-cookies. Canvas download/preview routes and other storage backends are refused.
+accept audited AWS S3 REST destinations and one reviewed InstFS content endpoint
+without Canvas authorization or cookies. Canvas download/preview routes and
+other storage backends are refused. PDF text extraction is available through
+`canvas_file_text` when local Poppler tools are installed.
 HTTPS, public-address DNS pinning, redirect, byte and time limits still apply.
 Credentials stay outside tool arguments and generated client config.
 

@@ -32,8 +32,10 @@ asserting the emitted method, path, accepted input and relevant unsafe variants.
 
 The common policy must cover named tools, discovered reads, pagination and the
 poller. Attachment content must come through authenticated metadata and the fixed
-`public_url` API pointer, then pass the audited S3-only download boundary on every
-hop without Canvas authorization or cookies. Do not re-enable UI/preview routes
+`public_url` API pointer, then pass the reviewed S3/InstFS download boundary on every
+hop without Canvas authorization or cookies. InstFS/CDN hosts, capabilities and
+redirects must meet the constraints in [read safety](docs/research/read-safety.md).
+Do not re-enable UI/preview routes
 or unsupported storage as a fallback. Credential operations belong in `auth.py`
 and never become agent tools.
 Scope strings require exact official placeholders, not generated friendly names.

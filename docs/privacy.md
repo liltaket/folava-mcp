@@ -7,7 +7,8 @@ account, institution and local-machine details from validation reports.
 
 The connector has no telemetry, analytics, advertising SDK, model SDK or hosted
 Folava backend. It makes requested Canvas reads, attachment requests through API
-pointers and S3, and explicit credential lifecycle requests. Normal DNS, TLS and Canvas
+pointers, S3 and the reviewed InstFS content service, and explicit credential lifecycle
+requests. Normal DNS, TLS and Canvas
 access logs still exist. Canvas may also refresh derived progress caches during
 GET requests; the connector does not promise that remote account state is
 unchanged. The [validation record](validation.md) explains the unresolved sampled

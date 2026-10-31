@@ -5,6 +5,8 @@ recorded during this review is
 [`1c9f0bb`](https://github.com/instructure/canvas-lms/tree/1c9f0bb8013ed69c4f2efe11fd483025469b7e6c).
 An institution can run another version or custom hooks. These are bounded
 engineering reviews, not a third-party audit or a guarantee of remote invariance.
+The findings table records the 0.1.3 boundary; the InstFS follow-up below extends
+the attachment destination policy.
 
 ## Findings addressed
 
@@ -49,3 +51,50 @@ Future progress-invariance testing should use a dedicated test course, retain
 diagnostic states only in memory, isolate one action at a time and distinguish
 completion transitions from metadata or item-membership changes. Do not rerun
 known stateful GETs against student work to demonstrate the failure.
+
+## InstFS content follow-up
+
+A bounded authorized deployment sample returned InstFS pointers instead of S3.
+An independent Sol source review examined the same pinned snapshot's
+[file public_url controller](https://github.com/instructure/canvas-lms/blob/1c9f0bb8013ed69c4f2efe11fd483025469b7e6c/app/controllers/files_controller.rb),
+[attachment model](https://github.com/instructure/canvas-lms/blob/1c9f0bb8013ed69c4f2efe11fd483025469b7e6c/app/models/attachment.rb)
+and [InstFS integration](https://github.com/instructure/canvas-lms/blob/1c9f0bb8013ed69c4f2efe11fd483025469b7e6c/lib/inst_fs.rb).
+The permission-checked pointer uses `Attachment#public_url`, whose InstFS branch
+overrides the user with `nil`. The resulting access capability binds an exact
+content resource without the UI controller's module-completion path.
+Instructure's [domain documentation](https://community.instructure.com/en/kb/articles/485223-canvas-domain-email-and-server-management)
+classifies `*.inscloudgate.net` as Canvas file storage.
+
+The new allowance is deliberately narrower than that domain classification:
+
+- Exact host `inst-fs-dub-prod.inscloudgate.net`, HTTPS, canonical UUID and one
+  safely encoded filename under `/files/`; reserved routes, ambiguous encodings,
+  decoded separators and control characters are refused.
+- Exactly one token with the observed HS512 JWT header and claim set
+  `{iat, exp, user_id, host, resource, jti}`. Identity/host must be null and the
+  resource must equal the raw path. Callback, fallback and session claims fail
+  closed. Parsing rejects duplicate keys and bounds token size.
+- Only an immediate 302 from that validated endpoint can enter exact host
+  `cdn.inst-fs-dub-prod.inscloudgate.net`. The CDN uses a different internal UUID
+  but must retain the identical raw filename. Its token has the confirmed header
+  `{alg: HS512, typ: JWT, kid: cdn}`, exactly the observed claims
+  `{resource, tenant, iat, exp, jti}`, and an exact raw-resource match. The only
+  other query field is a bounded media type. A CDN response must be terminal;
+  initial CDN pointers and further CDN redirects are refused.
+- Existing public DNS pinning, no Canvas authorization/cookies, byte/time limits,
+  per-hop validation and signed-URL redaction remain in force.
+
+JWT inspection is a structural policy filter, not local signature verification.
+The authenticated Canvas API supplies the original capability; the storage
+services verify signatures. The provider's validated redirect supplies the
+internal object-ID mapping. CDN routing and claim shapes were observed in the
+deployment, not established from public CDN server source. Neither InstFS nor
+CDN server internals were available for exhaustive review. Ordinary access logs,
+cache writes and undocumented/custom deployment behavior remain possible.
+This is evidence for constrained content delivery, not remote-state invariance.
+
+Actual PDF attachments were downloaded through this path and produced text;
+a hidden attachment was still refused. Local tests cover token/path/host confusion,
+duplicate and identity-bearing claims, CDN entry/redirect restrictions, credential
+isolation and output redaction. PDF text extraction itself uses separate bounded
+Poppler processes; it does not enable an additional remote read route.

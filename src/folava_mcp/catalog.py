@@ -380,7 +380,7 @@ _add(
     "file_download_url",
     "files/{file_id}/public_url",
     "",
-    "Read a permitted storage URL; content tool accepts audited S3 REST URLs only.",
+    "Read a permitted storage URL; content accepts reviewed S3 and bounded InstFS capabilities.",
     "files",
 )
 _add("folder", "folders/{folder_id}", "", "Folder metadata and permissions.", "files")

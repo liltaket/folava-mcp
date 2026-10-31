@@ -3,7 +3,7 @@
 > Historical research note: current implementation excludes assignment/module-item
 > detail, quiz-submission, direct page/front-page and individual revision reads.
 > Attachment content now requires the fixed public_url API pointer and audited
-> AWS S3 REST storage. See the [current tool boundary](../tools.md#excluded-reads)
+> S3 or the reviewed InstFS content path. See the [current tool boundary](../tools.md#excluded-reads)
 > and [validation evidence](../validation.md); older candidate routes below are
 > not an instruction to call them.
 

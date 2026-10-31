@@ -1,5 +1,33 @@
 # Validation evidence
 
+## Unreleased page and attachment follow-up
+
+`canvas_page` selects a course-page body through the reviewed collection route;
+`canvas_file_text` extracts UTF-8/PDF text with explicit coverage limits. The
+attachment transport now accepts the constrained InstFS/CDN path described in
+[read safety](research/read-safety.md#instfs-content-follow-up).
+The local Linux/Python 3.12 suite passed 343 tests, including real MCP stdio and
+real synthetic PDF extraction with Poppler. Ruff lint/format, public-text checks,
+documentation generation, wheel/source-distribution builds and the isolated
+wheel CLI smoke check passed. Independent Sol review found and verified a fix
+for parser cleanup with a full stdout pipe; no blocking findings remained. Optional
+Playwright site checks were not run because that development extra was absent.
+
+An authorized, bounded live sample found 404 page collections and 403 file
+collections. File IDs from assignment/module collections nevertheless allowed
+PDF downloads through InstFS/CDN. Full-document text and deliberately partial
+page windows reported their completeness correctly. A hidden attachment remained
+refused. A separate transport audit permitted GET requests only.
+Coursework, signed URLs and identifiers were not printed or retained; PDF
+temporary files were removed. Credentials came from protected external storage.
+This establishes compatibility for those attachment samples, not unchanged
+remote state, all course pages, all file types or other institutions.
+
+Browser checks reached TimeEdit's public schedule entry point without a logged-in
+KTH session. Personal schedules and Ping Pong content remain unverified. The
+official TimeEdit subscription route is documented in the tool guide; no KTH
+calendar reader is implemented in this follow-up.
+
 ## 0.1.4 follow-up
 
 - 254 software tests passed; Ruff lint and formatting passed.
@@ -93,9 +121,10 @@ concurrent-refresh test exercises the Windows lock behavior on Windows CI.
 A subsequent source review identified stateful GET behavior in assignment detail,
 Horizon module-item detail and quiz-submission routes, plus both submission
 read-state include spellings. Those routes/includes are now excluded. Attachment
-content now uses metadata and the fixed `public_url` API pointer, allowing only
-audited AWS S3 REST destinations without Canvas authorization or cookies. UI,
-InstFS, CDN, custom and local-storage fallback downloads are refused.
+content at that review point used metadata and the fixed `public_url` API pointer,
+allowing only audited AWS S3 REST destinations without Canvas authorization or
+cookies. The unreleased follow-up above extends that boundary to constrained
+InstFS/CDN content; UI, custom and local-storage fallbacks remain refused.
 
 Limited private deployment checks exercised permitted reads and an actual
 SDK stdio connection. One module-requirement comparison was inconclusive; neither

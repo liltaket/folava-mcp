@@ -29,8 +29,9 @@ Exact validation evidence is recorded in [validation](validation.md).
    established. Mock request assertions do not prove remote state behavior.
 4. Validate actual course permissions, endpoint scope compatibility, file storage
    compatibility and calendaring for the target institution. Attachment support
-   currently requires audited AWS S3 REST storage; the Canvas checks downloaded no
-   real file content.
+   requires supported S3 or the reviewed InstFS content path. A bounded authorized
+   sample downloaded PDFs through InstFS/CDN and extracted text; it does not
+   establish support for other backends or unrestricted page access.
 5. Test installation and complete workflows in the target Codex and T3 Code hosts.
    SDK stdio tests do not establish all host-specific behavior.
 6. Before selling a hosted service, define operator ownership, consent, data

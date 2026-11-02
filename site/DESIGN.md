@@ -4,7 +4,8 @@ A quiet, useful front door to a personal study tool. The homepage's main job is
 to let someone hand setup to their agent. A short installation row and a copy
 icon come before the manual commands and fictional coursework example. The icon
 copies the complete agent instructions; a native disclosure shows that text on
-request and opens automatically if manual copying is needed.
+request and opens automatically if manual copying is needed. Below the copy row,
+the setup card lists the three things the prompt asks the agent to do.
 
 ## Visual language
 
@@ -12,13 +13,18 @@ White #ffffff, soft paper #f5f5f5, graphite #242426, secondary ink #66666b and
 rule #dedee2 form the light palette. Dark uses paper #18181b, panel #232326,
 ink #eeeeef, secondary ink #b1b1b7 and rule #414147. Actions, selection, focus and
 status messages use corresponding neutral tokens. Color does not carry meaning
-alone. A muted lilac #a38aca is reserved for the hero's pencil mark and a small
-tint in its main action. Avoid gradients, tinted feature grids and large offset
-card shadows.
+alone. A muted lilac #a38aca draws the hero's pencil mark and tints its main
+action, the preview status, source types, the selected example question and the
+development-preview note (wash #f4f0fa, ink #5b4880). The terminal setup is the
+one dark surface in light mode (#232227). Avoid gradients, tinted feature grids
+and large offset card shadows; the setup card and terminal carry one soft,
+low shadow each.
 
-Type remains a locally available humanist sans (Aptos/Segoe UI), with a generous
-heading scale and readable body measure. Monospace is reserved for commands and
-API examples. The original overlapping-note mark is a small supporting element;
+Type is Schibsted Grotesk, self-hosted as a variable Latin WOFF2 in
+`site/assets/fonts/` under the SIL Open Font License (`OFL.txt` beside it), so
+pages make no font requests to third parties. Aptos/Segoe UI remain the fallback.
+Headings use weight 650–680 with tight tracking and a generous scale; body text
+keeps a readable measure. Monospace is reserved for commands and API examples. The original overlapping-note mark is a small supporting element;
 the project name stays readable beside it. No Folava GUI assets are used.
 
 The round, lightly translucent navigation is the main expressive detail. Its
@@ -27,7 +33,11 @@ readable when transparency is unavailable. Desktop links and controls share a
 compact capsule; search and its shortcut have no extra outline at rest.
 Other sections use open space,
 modest corner radii and quiet rules. The layout stays left-aligned, with the
-actual setup note opposite the introduction and manual setup below.
+actual setup note opposite the introduction and manual setup below. Terminal
+setup is a numbered sequence: install, connect the demo, connect Canvas. In the
+example section, the three questions form a vertical tab list beside the sample
+course, whose panel shows the question as a chat message and the Canvas sources
+beneath it. Data and access uses three short principles under top rules.
 
 On phones, the hero becomes a narrow reading column with a fluid two-line
 headline. Its spacing brings the copyable setup command closer to the introduction;

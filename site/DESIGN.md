@@ -110,8 +110,9 @@ example tab is selected: circles first, then the notes. The signature writes
 itself the same way. No looping motion and no fades on ordinary sections.
 Reduced-motion and script-free views show every mark complete and static.
 In-page links scroll smoothly. When the setup card is already on screen, Agent
-setup does not scroll: it focuses the card, which briefly grows with a lilac
-ring while its copy row glows and "start here" is written again. Otherwise it
+setup does not scroll: it focuses the card, which grows with a lilac ring while
+its copy row glows and "start here" is written again. The highlight stays until
+the visitor clicks outside the card, presses Escape or tabs away. Otherwise it
 scrolls first and then highlights. Reduced motion swaps all of this for an
 instant change and a static outline on the copy row. Clear keyboard focus, contrast and responsive
 reading order are release requirements. The bookmark and paper-plane studies were

@@ -152,19 +152,24 @@
     panel.classList.add('is-drawn');
   };
   // Agent setup is usually already on screen, so the link also calls attention to the card.
+  // The highlight stays until the visitor clicks elsewhere, presses Escape or tabs away.
   const setupCard = document.getElementById('agent-setup');
   if (setupCard) {
+    const release = () => setupCard.classList.remove('is-called');
     const call = () => {
-      setupCard.classList.remove('is-called');
+      release();
       void setupCard.offsetWidth;
       setupCard.classList.add('is-called');
     };
-    setupCard.addEventListener('animationend', event => {
-      if (event.target === setupCard && event.animationName === 'setup-call') {
-        setupCard.classList.remove('is-called');
-      }
+    document.addEventListener('pointerdown', event => {
+      if (!setupCard.contains(event.target)) release();
     });
-    if (calm.matches) setupCard.addEventListener('blur', () => setupCard.classList.remove('is-called'));
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') release();
+    });
+    setupCard.addEventListener('focusout', event => {
+      if (event.relatedTarget && !setupCard.contains(event.relatedTarget)) release();
+    });
     document.querySelectorAll('a[href="#agent-setup"]').forEach(link => {
       link.addEventListener('click', event => {
         const box = setupCard.getBoundingClientRect();

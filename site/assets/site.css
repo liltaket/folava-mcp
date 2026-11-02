@@ -1819,12 +1819,23 @@ td code {
         mix-blend-mode: normal
     }
 
+    /* `scale` stays independent of the card's arrival transform. */
+    .agent-setup {
+        transition: scale .5s cubic-bezier(.2, .8, .2, 1), box-shadow .5s ease
+    }
+
+    .agent-setup .setup-command {
+        transition: box-shadow .4s ease
+    }
+
     .agent-setup.is-called {
-        animation: setup-call 1.1s cubic-bezier(.2, .8, .2, 1) both
+        scale: 1.04;
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--lilac) 45%, transparent), 0 30px 60px -28px rgb(30 24 50 / 40%)
     }
 
     .agent-setup.is-called .setup-command {
-        animation: command-glow 1.6s .35s ease-out both
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--lilac) 50%, transparent);
+        transition-delay: .2s
     }
 
     .agent-setup.is-called .pencil-hint span {
@@ -1838,23 +1849,6 @@ td code {
     .agent-setup.is-called .pencil-hint .pencil-head {
         animation-duration: .25s;
         animation-delay: 1.1s
-    }
-
-    @keyframes setup-call {
-        0% { transform: none }
-        30% {
-            transform: scale(1.045);
-            box-shadow: 0 0 0 4px color-mix(in srgb, var(--lilac) 45%, transparent), 0 30px 60px -28px rgb(30 24 50 / 40%)
-        }
-        100% {
-            transform: none;
-            box-shadow: 0 0 0 0 transparent, 0 1px 2px rgb(20 20 30 / 5%)
-        }
-    }
-
-    @keyframes command-glow {
-        0%, 100% { box-shadow: 0 0 0 0 transparent }
-        25% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--lilac) 50%, transparent) }
     }
 
     @keyframes pencil-draw-again {

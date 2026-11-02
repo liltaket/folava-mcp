@@ -128,7 +128,25 @@
       item.tabIndex = selected ? 0 : -1;
       document.getElementById(item.getAttribute('aria-controls')).hidden = !selected;
     });
+    // Redraw the pencil marks on the panel that was just chosen.
+    const panel = document.getElementById(tab.getAttribute('aria-controls'));
+    panel.classList.remove('is-drawn');
+    void panel.offsetWidth;
+    panel.classList.add('is-drawn');
   };
+  const marks = document.querySelectorAll('[data-pencil]');
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-drawn');
+        observer.unobserve(entry.target);
+      });
+    }, {threshold: .5});
+    marks.forEach(mark => observer.observe(mark));
+  } else {
+    marks.forEach(mark => mark.classList.add('is-drawn'));
+  }
   tabs.forEach((tab, index) => {
     tab.addEventListener('click', () => selectTab(tab));
     tab.addEventListener('keydown', event => {

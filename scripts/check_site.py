@@ -345,7 +345,7 @@ def check(site: Path, screenshots: Path | None = None):
         feedback = page.get_by_role("tab", name="Feedback")
         feedback.click()
         expect(feedback).to_have_attribute("aria-selected", "true")
-        expect(page.get_by_role("tabpanel")).to_contain_text("Help me understand")
+        expect(page.get_by_role("tabpanel")).to_contain_text("canvas_submission")
         feedback.press("ArrowRight")
         expect(page.get_by_role("tab", name="Course files")).to_be_focused()
         expect(page.get_by_role("tabpanel")).to_contain_text("field-guide.txt")

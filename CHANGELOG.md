@@ -2,11 +2,11 @@
 
 ## Unreleased
 
-- Gave the homepage a more polished layout while keeping its structure, copy,
-  pencil and navigation. Self-hosted Schibsted Grotesk (OFL) as the site font,
-  added a setup-step list to the agent card, turned terminal setup into a numbered
-  dark panel, placed example questions beside the sample course and summarized
-  data and access as three principles.
+- Gave the homepage a more personal, polished layout. Self-hosted Schibsted
+  Grotesk and Caveat (both OFL). Replaced the mock conversation with trimmed real
+  demo responses and pencil annotations that draw when seen. Added a signed note
+  from the maintainer, plainer setup and data sections, a human preview line and
+  footer, and fewer boxes overall.
 - Tightened the desktop navigation and simplified its search control. Made the
   search dialog rounder and more compact, with five initial suggestions and
   shorter excerpts shown only after typing.

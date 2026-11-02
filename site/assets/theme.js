@@ -20,11 +20,12 @@
   };
   window.folavaTheme = {
     getPreference: () => preference,
-    setPreference: value => {
+    // Saves at once; `render` may defer applying the theme, e.g. inside a view transition.
+    setPreference: (value, render = draw => draw()) => {
       if (!valid(value)) return;
       preference = value;
       try { window.localStorage.setItem(key, value); } catch { /* Session-only fallback. */ }
-      apply();
+      render(apply);
     },
   };
   system.addEventListener('change', () => {

@@ -70,7 +70,9 @@ Reviewed reads do not imply that Canvas leaves all remote state unchanged.
 ## Behavior
 
 One unboxed sun/moon button switches between light and dark on every page. Its
-icon and accessible action name show the destination theme. It follows OS changes
+icon and accessible action name show the destination theme. On click the icons
+rotate past each other and the new theme grows out of the button as a circle
+(a view transition); the choice is saved before the animation starts. It follows OS changes
 until the visitor makes a choice; that choice persists locally across routes.
 A local initializer applies the theme before styles load. Blocked storage permits
 a page-local choice, and the no-JavaScript reading surface follows the OS.
@@ -106,6 +108,11 @@ writes "start here" in the setup card and draws an arrow to the copy button.
 Further pencil marks draw once when they first come into view, or again when an
 example tab is selected: circles first, then the notes. The signature writes
 itself the same way. No looping motion and no fades on ordinary sections.
-Reduced-motion and script-free views show every mark complete and static. Clear keyboard focus, contrast and responsive
+Reduced-motion and script-free views show every mark complete and static.
+In-page links scroll smoothly. When the setup card is already on screen, Agent
+setup does not scroll: it focuses the card, which briefly grows with a lilac
+ring while its copy row glows and "start here" is written again. Otherwise it
+scrolls first and then highlights. Reduced motion swaps all of this for an
+instant change and a static outline on the copy row. Clear keyboard focus, contrast and responsive
 reading order are release requirements. The bookmark and paper-plane studies were
 discarded after the pencil direction was selected.

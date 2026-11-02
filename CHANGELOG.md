@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Animated the theme switch: the sun and moon rotate past each other and the
+  new theme grows from the button. Added smooth in-page scrolling, and made
+  Agent setup highlight the setup card instead of nudging the page.
 - Gave the homepage a more personal, polished layout. Self-hosted Schibsted
   Grotesk and Caveat (both OFL). Replaced the mock conversation with trimmed real
   demo responses and pencil annotations that draw when seen. Added a signed note

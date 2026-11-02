@@ -50,6 +50,7 @@
       }
     });
   }
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
   const themeControl = document.getElementById('theme-toggle');
   if (themeControl && window.folavaTheme) {
     const syncTheme = () => {
@@ -62,7 +63,23 @@
     themeControl.hidden = false;
     themeControl.addEventListener('click', () => {
       const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-      window.folavaTheme.setPreference(next);
+      if (!document.startViewTransition || calm.matches) {
+        window.folavaTheme.setPreference(next);
+        return;
+      }
+      // Grow the new theme out of the toggle as a circle.
+      const box = themeControl.getBoundingClientRect();
+      const x = box.left + box.width / 2;
+      const y = box.top + box.height / 2;
+      const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+      window.folavaTheme.setPreference(next, draw => {
+        document.startViewTransition(draw).ready.then(() => {
+          document.documentElement.animate(
+            {clipPath: [`circle(0 at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`]},
+            {duration: 560, easing: 'cubic-bezier(.4, 0, .2, 1)', pseudoElement: '::view-transition-new(root)'},
+          );
+        }).catch(() => {});
+      });
     });
     window.addEventListener('themechange', syncTheme);
   }
@@ -134,6 +151,36 @@
     void panel.offsetWidth;
     panel.classList.add('is-drawn');
   };
+  // Agent setup is usually already on screen, so the link also calls attention to the card.
+  const setupCard = document.getElementById('agent-setup');
+  if (setupCard) {
+    const call = () => {
+      setupCard.classList.remove('is-called');
+      void setupCard.offsetWidth;
+      setupCard.classList.add('is-called');
+    };
+    setupCard.addEventListener('animationend', event => {
+      if (event.target === setupCard && event.animationName === 'setup-call') {
+        setupCard.classList.remove('is-called');
+      }
+    });
+    if (calm.matches) setupCard.addEventListener('blur', () => setupCard.classList.remove('is-called'));
+    document.querySelectorAll('a[href="#agent-setup"]').forEach(link => {
+      link.addEventListener('click', event => {
+        const box = setupCard.getBoundingClientRect();
+        if (box.top >= 0 && box.bottom <= innerHeight) {
+          // Already visible: skip the small jump and highlight the card in place.
+          event.preventDefault();
+          setupCard.focus({preventScroll: true});
+          call();
+        } else if ('onscrollend' in window) {
+          window.addEventListener('scrollend', call, {once: true});
+        } else {
+          setTimeout(call, 450);
+        }
+      });
+    });
+  }
   const marks = document.querySelectorAll('[data-pencil]');
   if ('IntersectionObserver' in window) {
     const observer = new IntersectionObserver(entries => {

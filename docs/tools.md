@@ -13,6 +13,7 @@ collections.
 | `canvas_outline` | List modules, then request a module's item list. |
 | `canvas_page` | Read a course page by slug through the reviewed page collection. |
 | `canvas_agenda` | Read planner work and explicit course calendars, both events and assignment dates. |
+| `kth_schedule` | Read an independently configured KTH TimeEdit subscription. |
 | `canvas_file` | Read a bounded attachment by Canvas file ID. |
 | `canvas_file_text` | Read UTF-8 text or extract PDF text with page numbers. |
 | `canvas_discover` | Search the reviewed operation catalog and parameter requirements. |
@@ -109,11 +110,26 @@ KTH Social solution in July 2026. The
 distinguish the simplified public view from authenticated details.
 
 KTH [announced closure of its public Timetable API](https://intra.kth.se/en/aktuellt/kalender/servicefonster-1.1491031)
-in August 2026. Folava does not use that legacy API and currently has no TimeEdit
-calendar reader. A future integration should use an actual subscription/export
-obtained from TimeEdit, preserve timezones and recurrence, and keep any private
-subscription URL outside tool arguments and logs. Canvas agenda results must
-not be presented as a complete KTH timetable.
+in August 2026. Folava instead reads a TimeEdit iCalendar subscription directly:
+
+1. Sign in through [KTH's schedule](https://www.kth.se/schema), choose **My Schedule**,
+   configure your filters and copy its **Subscribe** calendar link.
+2. On the machine running Folava, run `folava-mcp kth-calendar connect` and paste
+   the link into the hidden prompt. For a named Canvas profile, pass `--profile NAME`.
+   The link is stored in the OS credential store, not in the MCP configuration or chat.
+3. Restart the MCP server. Ask your agent for your KTH schedule, or call
+   `kth_schedule` with `start_date` and `end_date` as ISO dates. The end date is
+   exclusive and the maximum range is 366 days. Each call fetches the current feed.
+
+The link grants access to the feed; treat it as a password. The integration accepts
+KTH TimeEdit `cloud.timeedit.net/kth/web/...` `.ics` links and requires an unlocked
+OS credential store. Remove the local link with `folava-mcp kth-calendar disconnect`.
+Events preserve offsets and all-day dates; floating times use Europe/Stockholm.
+Recurring events and exceptions are expanded in the requested range; high-frequency
+recurrence is rejected. Failures, oversized feeds and truncated results do not claim
+completeness. The subscription determines its own date coverage and filters, so an
+empty result does not prove KTH has no other events. Canvas and TimeEdit are separate
+sources and may overlap. The KTH feed is not an Outlook/Exchange calendar.
 
 ## Attachments
 

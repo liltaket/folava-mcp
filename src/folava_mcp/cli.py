@@ -29,6 +29,8 @@ auth_app = typer.Typer(
 app.add_typer(auth_app, name="auth")
 events_app = typer.Typer(no_args_is_help=True, help="Replay locally recorded change events.")
 app.add_typer(events_app, name="events")
+kth_app = typer.Typer(no_args_is_help=True, help="Connect a KTH TimeEdit subscription.")
+app.add_typer(kth_app, name="kth-calendar")
 
 ProfileOption = Annotated[str, typer.Option("--profile", "-p", help="Canvas profile name.")]
 # Small enough for institutional consent URLs; expanded access is opt-in with --scope.
@@ -76,6 +78,28 @@ def friendly_errors(function: Callable[..., Any]) -> Callable[..., Any]:
             raise typer.Exit(1) from None
 
     return wrapped
+
+
+@kth_app.command("connect")
+@friendly_errors
+def kth_connect(profile: ProfileOption = "default") -> None:
+    """Save a subscription link privately, without passing it to an agent."""
+    from .kth_calendar import save_url
+
+    typer.echo("Copy the subscription link from KTH TimeEdit. Treat it like a password.")
+    url = typer.prompt("KTH TimeEdit subscription URL", hide_input=True)
+    save_url(profile, url)
+    typer.echo("KTH subscription saved. Restart your MCP server to use kth_schedule.")
+
+
+@kth_app.command("disconnect")
+@friendly_errors
+def kth_disconnect(profile: ProfileOption = "default") -> None:
+    """Remove the local subscription credential."""
+    from .kth_calendar import remove_url
+
+    remove_url(profile)
+    typer.echo("KTH subscription removed from the credential store.")
 
 
 @auth_app.command("login")

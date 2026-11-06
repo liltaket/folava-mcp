@@ -21,7 +21,7 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
   "Topic :: Education",
 ]
-dependencies = ["mcp==2.3.0", "httpx==0.28.1", "keyring>=25.7,<26", "typer>=0.27,<0.28"]
+dependencies = ["mcp==2.3.0", "httpx==0.28.1", "keyring>=25.7,<26", "typer>=0.27,<0.28", "icalendar>=6,<7", "recurring-ical-events>=3,<4"]
 
 [project.scripts]
 folava-mcp = "folava_mcp.cli:app"

@@ -43,6 +43,8 @@ Canvas    Stays the source of truth.
   bounded pagination, permission errors, and protected attachment downloads.
 - **Your own environment.** Runs as a local process. No Folava account, hosted
   database, telemetry, model subscription or API key is required.
+- **KTH schedules.** Connect a private TimeEdit subscription to read your schedule
+  alongside Canvas; see [setup](docs/tools.md#kth-schedules).
 - **Changes you can automate.** Poll a collection, persist its hashes, and replay
   JSONL events after a cursor. Connect your own scheduler or agent runner.
 
